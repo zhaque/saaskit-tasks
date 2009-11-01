@@ -5,7 +5,7 @@
 {% block content %}
 
 <script type="text/javascript">
-
+/*
 function order_tasks(data) {
     // The JQuery plugin tableDnD provides a serialize() function which provides the re-ordered 
     // data in a list. We pass that list as an object called "data" to a Django view 
@@ -33,7 +33,7 @@ $(document).ready(function() {
         $(this).siblings('#AddTask').slideToggle();
     });
 });
-
+*/
 </script>
 
 
@@ -70,8 +70,8 @@ $(document).ready(function() {
 	           <td>{{ form.due_date.errors }}</td>
 	       </tr>
 	       <tr>
-	           <td><label for="id_title">Task:</label> {{ form.title }}</td>
-	           <td><label for="id_due_date">Due date:</label> {{ form.due_date }}</td>
+	           <td><label for="id_title">Task:</label> {{ form.name }}</td>
+	           <td><label for="id_due_date">Due date:</label> {{ form.date_due }}</td>
 	           <td><label for="id_assigned">Assign to:</label> {{ form.assigned_to }}</td>
 	           <td><label for="id_notify">Notify*:</label> <input type="checkbox" checked="checked" name="notify" value="1" id="notify"></td>
  	       </tr>
@@ -102,9 +102,9 @@ $(document).ready(function() {
             <th>Done</th>             
             <th>Task</th> 
             <th>Created</th> 
-            <th>Due on</th>                         
-            <th>Owner</th> 
-            <th>Assigned</th>   
+            <th>Due on</th>
+            <th>Owner</th>
+            <th>Assigned</th>
             <th>Note</th>   
             <th>Comm</th>                            
  

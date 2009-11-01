@@ -1,0 +1,28 @@
+{% extends "todo/base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+
+   <h1>Projects</h1>
+   
+   <p>{{ item_count }} tasks in {{ list_count }} projects</p>
+
+   	<ul class="mainlist">
+   		{% for list in list_list %}
+   	        <li><a class="todo" href="{% url todo-incomplete_tasks list.id %}">{{ list.name }} - {{ list.group }}</a> ({{ list.incomplete_tasks.count }}/{{ list.tasks.count }})</li>
+   	    {% endfor %}
+   	</ul>
+
+    <div class="todo-break">
+    &nbsp;
+    </div>
+
+    <h2>Add a project:</h2>
+    
+	<form action="." method="POST">	
+	<table>{{ form }}</table>
+	<p><input type="submit" value="Submit" class="todo-button"></p>
+	</form>
+	
+{% endblock %}
