@@ -2,7 +2,22 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
-import simplejson, datetime
+from django.conf import settings
+import simplejson, datetime, urllib, urllib2
+
+YQL_URL = getattr(settings, 'YQL_URL', 'http://query.yahooapis.com/v1/public/yql')
+YQL_ENV = getattr(settings, 'YQL_ENV', 'http://datatables.org/alltables.env')
+
+def yql(query):
+	data = {
+		'q':query,
+		'env':YQL_ENV,
+		'diagnostics':'false',
+		'format':'json',
+	}
+	response = urllib2.urlopen(YQL_URL, urllib.urlencode(data))
+	r = response.read()
+	return deserialize(r)
 
 def _json_encode(obj):
 	if isinstance(obj, datetime.datetime):

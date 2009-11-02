@@ -105,6 +105,7 @@ $(document).ready(function() {
 	   <p><a class="todo" href="{% url tasks-project_delete project.id %}">Delete this project</a></p>
 	{% endifnotequal %}
 	{% endifequal %}
+<br /><br />
 
    {% ifequal auth_ok 1 %}
    
@@ -122,8 +123,8 @@ $(document).ready(function() {
         {% endifnotequal %}
         
         
+<br /><br />
     {% ifequal view_completed 0  %}
-
 	<h3>Incomplete tasks</h3>
 	<p><a  class="todo" href="{% url tasks-project_complete_tasks project.id %}">View completed tasks</a></p>
 	   

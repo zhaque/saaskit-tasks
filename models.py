@@ -19,7 +19,7 @@ class Project(models.Model):
 	name = models.CharField(max_length=60)
 	slug = models.SlugField(max_length=60, blank=True)
 	type = models.IntegerField(choices=TASKS_LIST_TYPES)
-	#date_created = models.DateField(auto_now_add=True)
+	#date_created = models.DateTimeField(auto_now_add=True)
 
 	def __unicode__(self):
 		return self.name
@@ -58,9 +58,9 @@ class Task(models.Model):
 	#active = models.BooleanField(default=True)
 	completed = models.BooleanField(default=False)
 	
-	date_created = models.DateField(auto_now_add=True)
-	date_due = models.DateField(blank=True,null=True)
-	date_completed = models.DateField(blank=True,null=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	date_due = models.DateTimeField(blank=True,null=True)
+	date_completed = models.DateTimeField(blank=True,null=True)
 		
 	# Custom manager lets us do things like Item.completed_tasks.all()
 	objects = models.Manager()
@@ -75,6 +75,13 @@ class Task(models.Model):
 		self.raw_data = serialize(v)
 	
 	data = property(get_data, set_data)
+	
+	def get_chances_remaining(self, user=None):
+		r = self.limit - self.achievements.count()
+		if user:
+			ur = self.limit_per_user - self.achievements.filter(user=user).count()
+			return min(r, ur)
+		return r
 	
 	@property
 	def summary(self):
@@ -104,11 +111,24 @@ class Task(models.Model):
 class Attachment(models.Model):
 	user = models.ForeignKey(User)
 	task = models.ForeignKey('Task', related_name='attachments')
-	created_date = models.DateField(auto_now_add=True)
+	created_date = models.DateTimeField(auto_now_add=True)
 	file = models.FileField(upload_to='attachments/')
 	
 	def __unicode__(self):
 		return self.file.name
+		
+class Achievement(models.Model):
+	user = models.ForeignKey(User, related_name='achievements')
+	task = models.ForeignKey('Task', related_name='achievements')
+	date_started = models.DateTimeField(auto_now_add=True)
+	complete = models.BooleanField(default=False)
+	
+	def __unicode__(self):
+		return self.task.name
+		
+	@property
+	def is_expired(self):
+		return self.date_started > datetime.datetime.now() + datetime.timedelta(minutes=self.task.reserve_time)
 
 #NOTE: I don't think I'm going to need this but I'll leave it for now
 class Comment(models.Model):	
@@ -118,7 +138,7 @@ class Comment(models.Model):
 	"""
 	author = models.ForeignKey(User)
 	task = models.ForeignKey('Task')
-	date = models.DateTimeField(default=datetime.datetime.now)
+	date = models.DateTimeField(auto_now_add=True)
 	body = models.TextField(blank=True)
 	
 	def __unicode__(self):		

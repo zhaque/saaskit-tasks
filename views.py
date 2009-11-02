@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from .models import Task, Project, Comment, Attachment
+from .models import Task, Project, Comment, Attachment, Achievement
 from .forms import AddProjectForm, AddItemForm, EditItemForm
 from .util import render_to, redirect_to, serialize_to
 import datetime
@@ -183,10 +183,22 @@ def task_new(request):
 		
 		if form.is_valid():
 			# Save task first so we have a db object to play with
-			new_task = form.save()
+			task = form.save()
+			
+			d = {}
+			
+			# TODO: extra fields for configuring tasks
+			tt = task.get_type_display().lower()
+			if tt in ['poll','quiz']:
+				d['question'] = 'What is the answer to life, the universe, and everything?'
+				d['answers'] = [{'text':'Pizza','count':0}, {'text':'42', 'count':0}, {'text':'I simply haven\'t a clue', 'count':0}]
+				
+			task.data = d
+			task.save()
+				
 
 			#if request.is_ajax():
-			return {'task':new_task}
+			return {'task':task}
 			#else:
 			#	msg = "Task added to %s: %s" % (new_task.project and ' to %s' % new_task.project.name or '', new_task.name)
 			#	request.user.message_set.create(message=msg)
@@ -202,22 +214,67 @@ def task_new(request):
 @render_to('tasks/task_detail.html')
 def task_detail(request, object_id):
 	task = get_object_or_404(Task, pk=object_id)
-	return {'task':task, 'data':task.data, 'template':'tasks/overview/%s.html' % task.get_type_display().lower()}
+	started = completed = None
+	remaining = 0
+	if request.user.is_authenticated():
+		completed = request.user.achievements.filter(task=task, complete=True)
+		remaining = task.limit_per_user - completed.count()
+		try:
+			started = request.user.achievements.get(task=task, complete=False)
+		except Achievement.DoesNotExist:
+			pass
+	return {'task':task, 'data':task.data, 'started':started, 'completed':completed, 'remaining':remaining}
 	
 @render_to('tasks/task_do.html')
 @login_required
 def task_do(request, object_id):
 	task = get_object_or_404(Task, pk=object_id)
+	
+	# Create or retrieve achievement
+	achievement = None
+	remaining = task.get_chances_remaining(request.user)
+	try:
+		achievement = Achievement.objects.get(user=request.user, task=task, complete=False)
+		if achievement.is_expired:
+			# Reset achievement time as long as there is room on the waiting list
+			if remaining > 0:
+				achievement.date_started = datetime.datetime.now()
+			else:
+				request.user.message_set.create(message='Sorry, your time to complete this task has run out.')
+				return redirect_to('tasks-task_detail', task.id)
+	except Achievement.DoesNotExist:
+		if remaining > 0:
+			a = Achievement()
+			a.task = task
+			a.user = request.user
+			a.save()
+			achievement = a
+	
 	if request.method == 'POST':
 		try:
 			typ = task.get_type_display().lower()
+			data = task.data
+			save = False
 			if typ == 'poll':
 				choice = int(request.POST['choice'])
+				data['answers'][choice]['count'] += 1
+				save = True
+				
+			if save:
+				task.data = data
+				task.save()
+				
+			achievement.complete = True
+			achievement.save()
+			
 			return redirect_to('tasks-task_detail', task.id)
+			
 		except KeyError, e:
 			request.user.message_set.create(message='Error: Please complete all required fields')
+		#except Exception, e:
+		#	request.user.message_set.create(message='Error: Something went wrong, try again later')
 	else:
-		pass #TODO: Reserve place
+		pass
 	return {'task':task, 'data':task.data, 'template':'tasks/form/%s.html' % task.get_type_display().lower()}
 	
 @render_to('tasks/task_edit.html')

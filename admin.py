@@ -17,7 +17,13 @@ class TaskAdmin(admin.ModelAdmin):
 	list_filter = ('completed',)
 	ordering = ('project','name')
 	search_fields = ('name','description')
+	
+class AchievementAdmin(admin.ModelAdmin):
+	list_display = ('task', 'user', 'complete', 'date_started')
+	date_heirarchy = 'date_started'
+	list_filter = ('complete',)
 
 admin.site.register(Attachment)
+admin.site.register(Achievement, AchievementAdmin)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Project, ProjectAdmin)
