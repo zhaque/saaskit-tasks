@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from .models import Task, Project, Comment
 from .forms import AddProjectForm, AddItemForm, EditItemForm
-from .util import render_to, redirect_to, serialize
+from .util import render_to, redirect_to, serialize_to
 import datetime
 
 # Need for links in email templates
@@ -138,6 +138,7 @@ def project_detail(request, object_id = 0, view_completed=0):
 		form = AddItemForm(request.POST,initial={
 		'assigned_to':request.user.id,
 		'priority':999,
+		'project':project.id,
 		})
 		
 		if form.is_valid():
@@ -165,6 +166,7 @@ def project_detail(request, object_id = 0, view_completed=0):
 		form = AddItemForm(initial={
 			'assigned_to':request.user.id,
 			'priority':999,
+			'project':project.id,
 			} )
 
 	if request.user.is_staff:
@@ -177,6 +179,7 @@ def project_detail(request, object_id = 0, view_completed=0):
 	return locals()
 
 #@render_to('tasks/task_detail_row.html')
+@serialize_to
 @login_required
 def task_new(request):
 	if request.method == 'GET':
@@ -202,25 +205,24 @@ def task_new(request):
 			"""
 			msg = "Task added to %s: %s" % (new_task.project and ' to %s' % new_task.project.name or '', new_task.name)
 			request.user.message_set.create(message=msg)
-			if request.is_ajax():
-				return serialize({'task':new_task})
-			else:
-				return HttpResponseRedirect(request.path)
+			#if request.is_ajax():
+			return {'task':new_task}
+			#else:
+			#	return HttpResponseRedirect(request.path)
 		
 		else:
 			form = AddItemForm()
+	#if request.is_ajax():
 	return HttpResponse('Invalid Request')
+	#else:
+	#	return HttpResponseRedirect(request.path)
 		
 
+@render_to('tasks/task_detail.html')
 @login_required
-def view_task(request,task_id):
-
-	"""
-	View task details. Allow task details to be edited.
-	"""
-
-	task = get_object_or_404(Task, pk=task_id)
-	comment_list = Comment.objects.filter(task=task_id)
+def task_detail(request, object_id):
+	task = get_object_or_404(Task, pk=object_id)
+	comment_list = Comment.objects.filter(task=object_id)
 		
 	# Before doing anything, make sure the accessing user has permission to view this item.
 	# Admins can edit all tasks.
@@ -254,7 +256,7 @@ def view_task(request,task_id):
 					 for c in commenters:
 						 recip_list.append(c.author.email)
 					 # Eliminate duplicate emails with the Python set() function
-					 recip_list = set(recip_list)	 
+					 recip_list = set(recip_list)
 					 
 					 # Send message
 					 try:
@@ -269,13 +271,13 @@ def view_task(request,task_id):
 				 
 		else:
 			form = EditItemForm(instance=task)
-			thedate = task.due_date
+			thedate = task.date_due
 			
 
 	else:
 		request.user.message_set.create(message="You do not have permission to view/edit this task.")
 
-	return render_to_response('todo/view_task.html', locals(), context_instance=RequestContext(request))
+	return locals()
 
 
 

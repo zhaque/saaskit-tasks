@@ -1,6 +1,6 @@
 {% extends "todo/base.html" %}
 
-{% block title %}Task: {{ task.title }}{% endblock %}
+{% block title %}{{ task.name }} - Task{% endblock %}
 
 {% block content %}
 
@@ -18,16 +18,6 @@ $(document).ready(function() {
 </script>
 
 
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
-
-
-
 {% ifequal auth_ok 1 %}
 
 <h2>{{ task }}</h2>
@@ -35,12 +25,12 @@ $(document).ready(function() {
 <form action="" method="POST">
 <p style="margin-bottom:0px;" id="slideToggle" >&rarr; Click to edit details &larr;</p>
 
-<p><strong>In list:</strong> <a href="{% url todo-incomplete_tasks task.list.id task.list.slug %}" class="showlink">{{ task.list }}</a><br /></p>
+<p><strong>In project:</strong> <a href="{% url todo-incomplete_tasks task.project.id %}" class="showlink">{{ task.list }}</a><br /></p>
 
 <p>
 <strong>Assigned to:</strong> {{ task.assigned_to.first_name }} {{ task.assigned_to.last_name }}<br />
 <strong>Created by:</strong> {{ task.created_by.first_name }} {{ task.created_by.last_name }}<br />
-<strong>Due date:</strong>  {{ task.due_date }}<br />
+<strong>Due date:</strong>  {{ task.date_due }}<br />
 <strong>Completed:</strong> {{ form.completed }}<br />
 </p>
 
@@ -59,22 +49,22 @@ $(document).ready(function() {
     {{ form.id }}
 <tr>    
     <td>Task:</td>
-    <td>{{ form.title }}  </td>
+    <td>{{ form.name }}  </td>
 </tr>
 
 <tr>    
-    <td>List:</td>
-    <td>{{ form.list }}  </td>
+    <td>Project:</td>
+    <td>{{ form.project }}  </td>
 </tr>
 
 <tr>    
     <td>Created:</td>
-    <td>{{ form.created_date }}  </td>
+    <td>{{ form.date_created }}  </td>
 </tr>
 
 <tr>    
     <td>Due:</td>
-    <td>{{ form.due_date }}  </td>
+    <td>{{ form.date_due }}  </td>
 </tr>
 
 
@@ -91,7 +81,7 @@ $(document).ready(function() {
 
 <tr>    
     <td valign="top">Note:</td>
-    <td>{{ form.note }}  </td>
+    <td>{{ form.description }}  </td>
 </tr>
 
 <tr>    
