@@ -65,7 +65,7 @@ def project_delete(request, object_id):
 		# A var to send to the template so we can show the right thing
 		list_killed = 1
 		
-		return redirect_to('todo-lists')
+		return redirect_to('tasks-index')
 	else:
 		item_count_done = Task.objects.filter(project=project.id,completed=1).count()
 		item_count_undone = Task.objects.filter(project=project.id,completed=0).count()
@@ -175,7 +175,6 @@ def project_detail(request, object_id = 0, view_completed=0):
 	list_slug = 'null'
 	return locals()
 
-#@render_to('tasks/task_detail_row.html')
 @serialize_to
 @login_required
 def task_new(request):
@@ -186,20 +185,6 @@ def task_new(request):
 			# Save task first so we have a db object to play with
 			new_task = form.save()
 
-			"""
-			# Send email alert only if the Notify checkbox is checked AND the assignee is not the same as the submittor
-			# Email subect and body format are handled by templates
-			if "notify" in request.POST :
-				if new_task.assigned_to != request.user :
-										
-					# Send email
-					email_subject = render_to_string("todo/email/assigned_subject.txt", { 'task': new_task })					
-					email_body = render_to_string("todo/email/assigned_body.txt", { 'task': new_task, 'site': current_site, })
-					try:
-						send_mail(email_subject, email_body, new_task.created_by.email, [new_task.assigned_to.email], fail_silently=False)
-					except:
-						request.user.message_set.create(message="Task saved but mail not sent. Contact your administrator." )
-			"""
 			#if request.is_ajax():
 			return {'task':new_task}
 			#else:
@@ -213,8 +198,28 @@ def task_new(request):
 	return HttpResponse('Invalid Request')
 	#else:
 	#	return HttpResponseRedirect(request.path)
-		
 
+@render_to('tasks/task_detail.html')
+def task_detail(request, object_id):
+	task = get_object_or_404(Task, pk=object_id)
+	return {'task':task, 'data':task.data, 'template':'tasks/overview/%s.html' % task.get_type_display().lower()}
+	
+@render_to('tasks/task_do.html')
+@login_required
+def task_do(request, object_id):
+	task = get_object_or_404(Task, pk=object_id)
+	if request.method == 'POST':
+		try:
+			typ = task.get_type_display().lower()
+			if typ == 'poll':
+				choice = int(request.POST['choice'])
+			return redirect_to('tasks-task_detail', task.id)
+		except KeyError, e:
+			request.user.message_set.create(message='Error: Please complete all required fields')
+	else:
+		pass #TODO: Reserve place
+	return {'task':task, 'data':task.data, 'template':'tasks/form/%s.html' % task.get_type_display().lower()}
+	
 @render_to('tasks/task_edit.html')
 @login_required
 def task_edit(request, object_id):
@@ -255,7 +260,7 @@ def task_edit(request, object_id):
 					 c.save()
 				 
 				 request.user.message_set.create(message="The task has been edited.")
-				 return HttpResponseRedirect(reverse('todo-incomplete_tasks', args=[task.list.id, task.list.slug]))
+				 return HttpResponseRedirect(reverse('tasks-project_incomplete_tasks', args=[task.list.id, task.list.slug]))
 				 
 		else:
 			form = EditItemForm(instance=task)

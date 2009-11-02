@@ -7,8 +7,8 @@ from .util import serialize, deserialize
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
 
 TASK_TYPES = (
-	(1, 'Poll'),
-	(2, 'Quiz'),
+	(1, 'poll'),
+	(2, 'quiz'),
 )
 
 class IncompleteTaskManager(models.Manager):
@@ -52,7 +52,7 @@ class Task(models.Model):
 	limit = models.IntegerField(default=100)
 	limit_per_user = models.IntegerField(default=1)
 	
-	reserve_time = models.IntegerField(help_text='in minutes', default=2)
+	reserve_time = models.IntegerField(help_text='in minutes', default=5)
 	
 	priority = models.PositiveIntegerField(max_length=3, default=0)
 	#active = models.BooleanField(default=True)
@@ -75,6 +75,14 @@ class Task(models.Model):
 		self.raw_data = serialize(v)
 	
 	data = property(get_data, set_data)
+	
+	@property
+	def summary(self):
+		r = self.get_type_display()
+		rl = r.lower()
+		if rl in ['poll','quiz']:
+			r += ': %s' % self.data['question']
+		return r
 	
 	@property
 	def is_overdue(self):

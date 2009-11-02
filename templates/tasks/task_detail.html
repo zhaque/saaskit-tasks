@@ -1,0 +1,18 @@
+{% extends "todo/base.html" %}
+
+
+{% block title %}{{ task.name }}{% endblock %}
+
+
+{% block content %}
+
+{% include "tasks/task_overview.html" %}
+
+<div id="task-form">
+	You have/have not completed this task...
+	<form action="{% url tasks-task_do task.id %}" method="get">
+		<input type="submit" value="Start" />
+	</form>
+</div>
+
+{% endblock %}

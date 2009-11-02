@@ -25,7 +25,7 @@ $(document).ready(function() {
 <form action="" method="POST">
 <p style="margin-bottom:0px;" id="slideToggle" >&rarr; Click to edit details &larr;</p>
 
-<p><strong>In project:</strong> <a href="{% url todo-incomplete_tasks task.project.id %}" class="showlink">{{ task.list }}</a><br /></p>
+{#<p><strong>In project:</strong> <a href="{% url tasks-project_incomplete_tasks task.project.id %}" class="showlink">{{ task.list }}</a><br /></p>#}
 
 <p>
 <strong>End date:</strong>  {{ task.date_due }}<br />

@@ -12,7 +12,7 @@ function save_new_task() {
 		function(data,status) {
 			var task = data.task;
 			var row = $('<tr id="task_' + task.id + '" style="display:none">');
-			row.append('<td><a href="{% url todo-task_detail 0 %}">' +  task.name + '</a></td>');
+			row.append('<td><a href="{% url tasks-task_detail 0 %}">'.replace('0',task.id) +  task.name + '</a></td>');
 			var date_created = new Date(task.date_created);
 			row.append('<td>' + date_created.getMonth() + '/' + date_created.getDate() + '/' + date_created.getFullYear() + '</td>');
 			row.append('<td>' + task.date_due + '</td>');
@@ -46,7 +46,7 @@ function order_tasks(data) {
     // data in a list. We pass that list as an object called "data" to a Django view 
     // to save the re-ordered data into the database.
 
-    $.post("{% url todo-reorder_tasks %}", data, "json");
+    $.post("{% url tasks-project_reorder_tasks %}", data, "json");
     return false;
 };
 
@@ -102,7 +102,7 @@ $(document).ready(function() {
 	
 	{% ifequal can_del 1 %}
 	{% ifnotequal list_slug "mine" %}    
-	   <p><a class="todo" href="{% url todo-del_list project.id %}">Delete this project</a></p>
+	   <p><a class="todo" href="{% url tasks-project_delete project.id %}">Delete this project</a></p>
 	{% endifnotequal %}
 	{% endifequal %}
 
@@ -125,7 +125,7 @@ $(document).ready(function() {
     {% ifequal view_completed 0  %}
 
 	<h3>Incomplete tasks</h3>
-	<p><a  class="todo" href="{% url todo-completed_tasks project.id %}">View completed tasks</a></p>
+	<p><a  class="todo" href="{% url tasks-project_complete_tasks project.id %}">View completed tasks</a></p>
 	   
 	<table border="0" id="tasktable">
 		<thead>
@@ -145,7 +145,7 @@ $(document).ready(function() {
 		<tbody>
 			{% for task in task_list %}
 				<tr class="{% cycle 'row1' 'row2' %}" id="task_{{ task.id }}">
-					<td><a href="{% url todo-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
+					<td><a href="{% url tasks-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
 					<td>{{ task.date_created|date:"m/d/Y" }}</td> 
 					<td>
 					{% if task.is_overdue %}<span class="overdue">{% endif %}
@@ -153,7 +153,7 @@ $(document).ready(function() {
 					{% if task.is_overdue %}</span>{% endif %}
 					</td>
 					{% ifequal list_slug "mine" %}
-					<td><a href="{% url todo-incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
+					<td><a href="{% url tasks-project_incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
 					{% endifequal %}
 						   
 					<td>
@@ -175,7 +175,7 @@ $(document).ready(function() {
 
     {% ifequal view_completed 1 %}
 	<h3>Completed tasks</h3> 
-    <p><a  class="todo" href="{% url todo-incomplete_tasks project.id %}">View incomplete tasks</a></p>
+    <p><a  class="todo" href="{% url tasks-project_incomplete_tasks project.id %}">View incomplete tasks</a></p>
 
 	<table border="0"  id="tasktable">	
         <tr>
@@ -192,7 +192,7 @@ $(document).ready(function() {
         
 		{% for task in completed_list %}
 	        <tr class="{% cycle 'row1' 'row2' %}" id="task_{{ task.id }}">     
-	            <td><a href="{% url todo-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
+	            <td><a href="{% url tasks-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
 	            <td>{{ task.date_created|date:"m/d/Y" }}</td> 
 	            <td>{{ task.date_completed|date:"m/d/Y" }}</td>	
 	               

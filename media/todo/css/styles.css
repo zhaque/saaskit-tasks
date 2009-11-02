@@ -33,7 +33,6 @@ a.showlink {
 
 
 label {
-    display: block;
     font-weight: bold;
 }
 
@@ -88,4 +87,22 @@ table#tasktable tr.row2 {
 .minor {
     font-style:italic;
     font-size:0.8em;
+}
+
+/************************************
+*              New                  *
+************************************/
+
+#task-overview {
+	padding:10px;
+	margin:10px;
+	background-color: #FCE593;
+	border:1px solid #F7D55B;
+}
+
+#task-form {
+	padding:10px;
+	margin:10px;
+	background-color: #B8CFD8;
+	border:1px solid #A8A8B5;
 }

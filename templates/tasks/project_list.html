@@ -10,7 +10,7 @@
 
    	<ul class="mainlist">
    		{% for list in list_list %}
-   	        <li><a class="todo" href="{% url todo-incomplete_tasks list.id %}">{{ list.name }} - {{ list.group }}</a> ({{ list.incomplete_tasks.count }}/{{ list.tasks.count }})</li>
+   	        <li><a class="todo" href="{% url tasks-project_incomplete_tasks list.id %}">{{ list.name }} - {{ list.group }}</a> ({{ list.incomplete_tasks.count }}/{{ list.tasks.count }})</li>
    	    {% endfor %}
    	</ul>
 
