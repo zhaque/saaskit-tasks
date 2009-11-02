@@ -182,8 +182,8 @@ def project_detail(request, object_id = 0, view_completed=0):
 @serialize_to
 @login_required
 def task_new(request):
-	if request.method == 'GET':
-		form = AddItemForm(request.GET)
+	if request.method == 'POST':
+		form = AddItemForm(request.POST)
 		
 		if form.is_valid():
 			# Save task first so we have a db object to play with
@@ -203,11 +203,11 @@ def task_new(request):
 					except:
 						request.user.message_set.create(message="Task saved but mail not sent. Contact your administrator." )
 			"""
-			msg = "Task added to %s: %s" % (new_task.project and ' to %s' % new_task.project.name or '', new_task.name)
-			request.user.message_set.create(message=msg)
 			#if request.is_ajax():
 			return {'task':new_task}
 			#else:
+			#	msg = "Task added to %s: %s" % (new_task.project and ' to %s' % new_task.project.name or '', new_task.name)
+			#	request.user.message_set.create(message=msg)
 			#	return HttpResponseRedirect(request.path)
 		
 		else:
@@ -280,6 +280,9 @@ def task_detail(request, object_id):
 	return locals()
 
 
+######################################
+#             Ajax Views             #
+######################################
 
 # @login_required
 def reorder_tasks(request):
@@ -304,5 +307,20 @@ def reorder_tasks(request):
 	# error 500s in the log even though things look peachy in the browser.	
 	return HttpResponse(status=201)
 		
-	
-	
+@serialize_to
+def api_task_set_completed(request):
+	if request.method == 'POST':
+		task = get_object_or_404(Task, pk=request.POST['task_id'])
+		# TODO: check permission
+		task.completed = bool(int(request.POST['completed']))
+		task.save()
+		return {'task':task}
+
+@serialize_to
+def api_task_delete(request):
+	if request.method == 'POST':
+		task = get_object_or_404(Task, pk=request.POST['task_id'])
+		# TODO: check permission
+		id = task.id
+		task.delete()
+		return {'task':{'id':id}}

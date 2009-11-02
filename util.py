@@ -53,7 +53,7 @@ def serialize_to(view):
 		if isinstance(r, HttpResponse):
 			return r
 		else:
-			return HttpResponse(serialize(r))
+			return HttpResponse(serialize(dict(r or {})))
 	return fn
 	
 

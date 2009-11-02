@@ -12,6 +12,8 @@ urlpatterns = patterns('tasks.views',
 	url(r'^project/(?P<list_id>\d{1,4})/delete/$', 'del_list', name="todo-del_list"),
 
 	# View reorder_tasks is only called by JQuery for drag/drop task ordering
-	url(r'^reorder_tasks/$', 'reorder_tasks',name="todo-reorder_tasks"),
+	url(r'^api/task/set_completed/$', 'api_task_set_completed', name='tasks-task_set_completed'),
+	url(r'^api/task/delete/$', 'api_task_delete', name='tasks-task_delete'),
+	url(r'^api/project/reorder_tasks/$', 'reorder_tasks', name="todo-reorder_tasks"),
 )
 

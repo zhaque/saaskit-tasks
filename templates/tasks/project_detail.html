@@ -6,17 +6,69 @@
 
 <script type="text/javascript">
 
+function save_new_task() {
+	var data = $('#new-task-form').serialize();
+	$.post('{% url tasks-task_new %}',
+		data,
+		function(data,status) {
+			var task = data.task;
+			var row = $('<tr id="task_' + task.id + '" style="display:none">');
+			row.append('<td><a href="{% url todo-task_detail 0 %}">' +  task.name + '</a></td>');
+			var date_created = new Date(task.date_created);
+			row.append('<td>' + date_created.getMonth() + '/' + date_created.getDate() + '/' + date_created.getFullYear() + '</td>');
+			row.append('<td>' + task.date_due + '</td>');
+			row.append('<td>' + task.created_by + '</td>');
+			row.append('<td>' + task.assigned_to + '</td>');
+			row.append('<td><form class="task-set-complete-form" action="{% url tasks-task_set_completed %}" method="post"><input type="hidden" name="task_id" value="' + task.id + '" /><input type="hidden" name="completed" value="1" /><input type="submit" value="*" /></form></td>');
+			row.append('<td><form class="task-set-complete-form" action="{% url tasks-task_delete %}" method="post"><input type="hidden" name="task_id" value="' + task.id + '" /><input type="submit" value="x" /></form></td>');
+			
+			initContent(row);
+			
+			var rows = $('#tasktable tbody');
+			if ($(rows.children()[0]).hasClass('row1')) {
+				row.addClass('row2');
+			}
+			else {
+				row.addClass('row1');
+			}
+			rows.prepend(row);
+			$('#task_' + task.id).fadeIn();//animate({opacity:'1.0'}, 'slow');
+			
+			$('#id_name').attr('value','').get(0).focus();
+			$('#id_date_due').attr('value','');
+		},
+		'json'
+	);
+	return false;
+}
+
 function order_tasks(data) {
     // The JQuery plugin tableDnD provides a serialize() function which provides the re-ordered 
     // data in a list. We pass that list as an object called "data" to a Django view 
     // to save the re-ordered data into the database.
 
     $.post("{% url todo-reorder_tasks %}", data, "json");
-    return False;
+    return false;
 };
 
+function hide_before_submit(data, form) {
+	var task_id = form.find('input[name="task_id"]').attr('value');
+	var task = $('#task_' + task_id);
+	task.fadeOut();
+}
+
+function initContent(obj) {
+	obj = $(obj);
+	obj.find('.task-set-complete-form').ajaxForm({beforeSubmit:hide_before_submit, dataType:'json'});
+}
+
 $(document).ready(function() {
+	$('#save-task-button').click(save_new_task);
 	$('#id_date_due').datepicker({defaultDate: new Date({{thedate.year}}, {{thedate.month}} - 1, {{thedate.day}}),});
+	
+	//$('.mark_done').click(task_set_completed);
+	initContent('body');
+	
     // Initialise the task table for drag/drop re-ordering
     $("#tasktable").tableDnD();
     
@@ -32,6 +84,7 @@ $(document).ready(function() {
     // toggle slide to show the Add Task form when link clicked
     $('#slideToggle').click(function(){
         $(this).siblings('#AddTask').slideToggle();
+		$('#id_name').get(0).focus();
     });
 });
 
@@ -47,12 +100,18 @@ $(document).ready(function() {
     {% endifequal %}
     {% endifequal %}
 
+	
+	{% ifequal can_del 1 %}
+	{% ifnotequal list_slug "mine" %}    
+	   <p><a class="todo" href="{% url todo-del_list project.id %}">Delete this project</a></p>
+	{% endifnotequal %}
+	{% endifequal %}
 
    {% ifequal auth_ok 1 %}
-   <form action="" method="POST">
    
    {# Only show task adder if viewing a proper list #}
    {% ifnotequal list_slug "mine" %}
+   <form id="new-task-form" action="" method="POST">
    <h2 style="margin-bottom:0px;" id="slideToggle" >&rarr; Click to add task &larr;</h2>
    
    <div id="AddTask">	    
@@ -65,82 +124,88 @@ $(document).ready(function() {
 	           <td><label for="id_name">Task:</label> {{ form.name }}</td>
 	           <td><label for="id_date_due">Due date:</label> {{ form.date_due }}</td>
 	           <td><label for="id_assigned">Assign to:</label> {{ form.assigned_to }}</td>
-	           <td><label for="id_notify">Notify*:</label> <input type="checkbox" checked="checked" name="notify" value="1" id="notify"></td>
+	           <td><label for="id_notify">Notify:</label> <input type="checkbox" checked="checked" name="notify" value="1" id="notify"></td>
  	       </tr>
+		   {% comment %}
 	       <tr>
 	           <td colspan="5"><label for="id_note">Note:</label> {{ form.note }}
 	               <p class="minor">*Email notifications will only be sent if task is assigned to someone besides yourself.</p>
 	           </td>
- 	       </tr> 	       
+ 	       </tr>
+		   {% endcomment %}
 	    </table>
 		
 		<input type="hidden" name="project" value="{{ form.initial.project }}" id="id_project" />
         <input type="hidden" name="priority" value="999" id="id_priority" />
         <input type="hidden" name="created_by" value="{{ request.user.id }}" id="id_created_by" />
-        <input type="hidden" name="created_date" value="{{ created_date }}" id="id_created_date" /> 
 	    
-	    <p><input type="submit" name="add_task" value="Add task" class="todo-button"></p>
+	    <p><input type="submit" id="save-task-button" name="add_task" value="Add task" class="todo-button"></p>
     </div>	    
-	    
+	   </form>
         {% endifnotequal %}
         
         
     {% ifequal view_completed 0  %}
 
-	<h3>Incomplete tasks :: Drag rows to set priorities</h3>
+	<h3>Incomplete tasks</h3>
+	<p><a  class="todo" href="{% url todo-completed_tasks project.id %}">View completed tasks</a></p>
 	   
-	<table border="0" id="tasktable">	
-        <tr>
-            <th>Done</th>             
-            <th>Task</th> 
-            <th>Created</th> 
-            <th>Due on</th>
-            <th>Owner</th>
-            <th>Assigned</th>
-            <th>Note</th>   
-            <th>Comm</th>                            
- 
-            {% ifequal list_slug "mine" %}
-            <th>List</th>   
-             {% endifequal %}            
-                                 
-            <th>Del</th>             
-        </tr>
-		{% for task in task_list %}
-	        <tr class="{% cycle 'row1' 'row2' %}" id="{{ task.id }}">
-	            <td><input type="checkbox" name="mark_done" value="{{ task.id }}" id="mark_done_{{ task.id }}">   </td> 
-	            <td><a href="{% url todo-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
-	            <td>{{ task.date_created|date:"m/d/Y" }}</td> 
-	            <td>
-	            {% if task.is_overdue %}<span class="overdue">{% endif %}
-	                {{ task.date_due|date:"m/d/Y" }}  
-	            {% if task.is_overdue %}</span>{% endif %}	                
-	            </td>
-	            <td>{{ task.created_by }}</td> 
-	            <td>{{ task.assigned_to }}</td>
-	            <td style="text-align:center;">{% if task.note %}&asymp;{% endif %} </td>
-	            <td style="text-align:center;">{% ifnotequal task.comment_set.all.count 0  %}{{ task.comment_set.all.count }}{% endifnotequal %}
-                   
-	            </td>	            
-	            {% ifequal list_slug "mine" %}
-                <td><a href="{% url todo-incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
-                {% endifequal %}
-                       
-	            <td><input type="checkbox" name="del_task" value="{{ task.id }}" id="del_task_{{ task.id }}">   </td> 	            
-            </tr>
-	    {% endfor %}
-	</table>   
-    <p><input type="submit" name="mark_tasks_done" value="Continue..."  class="todo-button"></p>
-    
-    <p><a  class="todo" href="{% url todo-completed_tasks project.id %}">View completed tasks</a></p>
+	<table border="0" id="tasktable">
+		<thead>
+			<tr>            
+				<th>Task</th> 
+				<th>Created</th> 
+				<th>Due on</th>
+				<th>Owner</th>
+				<th>Assigned</th>              
+	 
+				{% ifequal list_slug "mine" %}
+				<th>List</th>   
+				 {% endifequal %}            
+							
+				<th>Done</th> 		 
+				<th>Del</th>             
+			</tr>
+		</thead>
+		<tbody>
+			{% for task in task_list %}
+				<tr class="{% cycle 'row1' 'row2' %}" id="task_{{ task.id }}">
+					<td><a href="{% url todo-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
+					<td>{{ task.date_created|date:"m/d/Y" }}</td> 
+					<td>
+					{% if task.is_overdue %}<span class="overdue">{% endif %}
+						{{ task.date_due|date:"m/d/Y" }}  
+					{% if task.is_overdue %}</span>{% endif %}	                
+					</td>
+					<td>{{ task.created_by }}</td> 
+					<td>{{ task.assigned_to }}</td>            
+					{% ifequal list_slug "mine" %}
+					<td><a href="{% url todo-incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
+					{% endifequal %}
+						   
+					<td>
+						<form class="task-set-complete-form" action="{% url tasks-task_set_completed %}" method="post">
+							<input type="hidden" name="task_id" value="{{ task.id }}" />
+							<input type="hidden" name="completed" value="1" />
+							<input type="submit" value="*" class="mark_done" />
+						</form>
+					</td>
+					<td><form class="task-set-complete-form" action="{% url tasks-task_delete %}" method="post">
+						<input type="hidden" name="task_id" value="{{ task.id }}" />
+						<input type="submit" value="x"/>
+					</form></td> 	            
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table> 
     {% endifequal %}    
 
     {% ifequal view_completed 1 %}
 	<h3>Completed tasks</h3> 
+    <p><a  class="todo" href="{% url todo-incomplete_tasks project.id %}">View incomplete tasks</a></p>
 
 	<table border="0"  id="tasktable">	
         <tr>
-            <th>Undo</th> 
             <th>Task</th> 
             <th>Created</th> 
             <th>Completed on</th>   
@@ -148,35 +213,36 @@ $(document).ready(function() {
             <th>Comm</th>            
             {% ifequal list_slug "mine" %}
             <th>List</th>   
-             {% endifequal %}                       
+             {% endifequal %} 
+            <th>Undo</th>                       
             <th>Del</th>                
         </tr>
 
         
 		{% for task in completed_list %}
-	        <tr class="{% cycle 'row1' 'row2' %}">     
-	            <td><input type="checkbox" name="undo_completed_task" value="{{ task.id }}" id="id_undo_completed_task{{ task.id }}">   </td> 	            	            	            
+	        <tr class="{% cycle 'row1' 'row2' %}" id="task_{{ task.id }}">     
 	            <td><a href="{% url todo-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
 	            <td>{{ task.date_created|date:"m/d/Y" }}</td> 
 	            <td>{{ task.date_completed|date:"m/d/Y" }}</td>	     
 	            <td style="text-align:center;">{% if task.note %}&asymp;{% endif %} </td>
 	            <td style="text-align:center;">{% ifnotequal task.comment_set.all.count 0  %}{{ task.comment_set.all.count }}{% endifnotequal %}
 	               
-	            <td><input type="checkbox" name="del_completed_task" value="{{ task.id }}" id="del_completed_task_{{ task.id }}">   </td> 	            	            
+	            <td>
+					<form class="task-set-complete-form" action="{% url tasks-task_set_completed %}" method="post">
+						<input type="hidden" name="task_id" value="{{ task.id }}" />
+						<input type="hidden" name="completed" value="0" />
+						<input type="submit" value="*" class="mark_done" />
+					</form>
+				</td>
+	            <td><form class="task-set-complete-form" action="{% url tasks-task_delete %}" method="post">
+						<input type="hidden" name="task_id" value="{{ task.id }}" />
+						<input type="submit" value="x" class="mark_done" />
+					</form></td> 	            	            
             </tr>
 	    {% endfor %}
 
 	</table>
-	<p><input type="submit" name="deldonetasks" value="Continue..."  class="todo-button"></p>
-	</form> 
-    <p><a  class="todo" href="{% url todo-incomplete_tasks project.id %}">View incomplete tasks</a></p>
     {% endifequal %}    
-	
-	{% ifequal can_del 1 %}
-	{% ifnotequal list_slug "mine" %}    
-	   <p><a class="todo" href="{% url todo-del_list project.id %}">Delete this list</a></p>
-	{% endifnotequal %}
-	{% endifequal %}
 	
     {% endifequal %}
 {% endblock %}

@@ -62,8 +62,8 @@ class Task(models.Model):
 		return self.name
 		
 	def save(self):
-		if self.completed and not self.completed_date:
-			self.completed_date = datetime.datetime.now()
+		if self.completed and not self.date_completed:
+			self.date_completed = datetime.datetime.now()
 		super(Task, self).save()
 
 	class Meta:
