@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from .models import Task, Project, Comment
+from .models import Task, Project, Comment, Attachment
 from .forms import AddProjectForm, AddItemForm, EditItemForm
 from .util import render_to, redirect_to, serialize_to
 import datetime
@@ -42,8 +42,9 @@ def project_list(request):
 	return {'form':form, 'list_list':projects, 'list_count':projects.count(), 'item_count':task_count}
 	
 
+@render_to('tasks/project_delete.html')
 @login_required
-def del_list(request,list_id,list_slug):
+def project_delete(request, object_id):
 
 	"""
 	Delete an entire list. Danger Will Robinson! Only staff members should be allowed to access this view.
@@ -53,28 +54,24 @@ def del_list(request,list_id,list_slug):
 		can_del = 1
 
 	# Get this list's object (to derive list.name, list.id, etc.)
-	project = get_object_or_404(Project, pk=list_id)
+	project = get_object_or_404(Project, pk=object_id)
 
 	# If delete confirmation is in the POST, delete all items in the list, then kill the list itself
 	if request.method == 'POST':
-		# Can the items
-		del_items = Task.objects.filter(project=list.id)
-		for del_item in del_items:
-			del_item.delete()
-		
 		# Kill the project
-		del_list = Project.objects.get(id=list.id)
-		del_list.delete()
+		project.tasks.all().delete()
+		project.delete()
 		
 		# A var to send to the template so we can show the right thing
 		list_killed = 1
-
+		
+		return redirect_to('todo-lists')
 	else:
-		item_count_done = Task.objects.filter(project=list.id,completed=1).count()
-		item_count_undone = Task.objects.filter(project=list.id,completed=0).count()
-		item_count_total = Task.objects.filter(project=list.id).count()	
+		item_count_done = Task.objects.filter(project=project.id,completed=1).count()
+		item_count_undone = Task.objects.filter(project=project.id,completed=0).count()
+		item_count_total = Task.objects.filter(project=project.id).count()	
 	
-	return render_to_response('todo/del_list.html', locals(), context_instance=RequestContext(request))
+	return locals()
 
 
 @render_to('tasks/project_detail.html')
@@ -222,6 +219,18 @@ def task_new(request):
 @login_required
 def task_detail(request, object_id):
 	task = get_object_or_404(Task, pk=object_id)
+	
+	if request.method == 'POST' and 'attachment' in request.FILES:
+		file = request.FILES['attachment']
+		a = Attachment()
+		a.user = request.user
+		a.task = task
+		a.file.save(file.name, file)
+		a.save()
+		request.user.message_set.create(message='Attachment saved')
+		return HttpResponseRedirect(request.path)
+		
+	
 	comment_list = Comment.objects.filter(task=object_id)
 		
 	# Before doing anything, make sure the accessing user has permission to view this item.

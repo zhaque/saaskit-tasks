@@ -18,6 +18,6 @@ class TaskAdmin(admin.ModelAdmin):
 	ordering = ('project','name')
 	search_fields = ('name','description')
 
-#admin.site.register(Comment)
+admin.site.register(Attachment)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Project, ProjectAdmin)

@@ -104,12 +104,29 @@ $(document).ready(function() {
 
 </form>
 
+<h3>Attach File</h3>
+<form action="." method="post" enctype="multipart/form-data">
+	<input type="file" name="attachment" />
+	<input type="submit" value="Attach" />
+</form>
+
+{% if task.attachments.count %}
+<h3>Attachments</h3>
+<ul>
+	{% for a in task.attachments.all %}
+	<li><a href="{{ a.file.url }}">{{ a.file.name }}</a></li>
+	{% endfor %}
+</ul>
+{% endif %}
+
+{% if comment_list %}
 <h3>Comments on this task</h3>    
 
 {% for comment in comment_list %}
     <p><strong>{{ comment.author.first_name }} {{ comment.author.last_name }}, {{ comment.date|date:"F d Y" }}</strong> </p>
     {{ comment.body|safe|linebreaks }}
 {% endfor %}
+{% endif %}
 
 
 

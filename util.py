@@ -58,4 +58,4 @@ def serialize_to(view):
 	
 
 def redirect_to(name, *args, **kargs):
-	return HttpResponseRedirect(reverse(args=args, kwargs=kargs))
+	return HttpResponseRedirect(reverse(name, args=args, kwargs=kargs))

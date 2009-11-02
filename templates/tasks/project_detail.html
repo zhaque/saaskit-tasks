@@ -3,7 +3,6 @@
 {% block title %}{{ list.name }} - Project Status{% endblock %}
 
 {% block content %}
-
 <script type="text/javascript">
 
 function save_new_task() {
@@ -17,8 +16,8 @@ function save_new_task() {
 			var date_created = new Date(task.date_created);
 			row.append('<td>' + date_created.getMonth() + '/' + date_created.getDate() + '/' + date_created.getFullYear() + '</td>');
 			row.append('<td>' + task.date_due + '</td>');
-			row.append('<td>' + task.created_by + '</td>');
-			row.append('<td>' + task.assigned_to + '</td>');
+			//row.append('<td>' + task.created_by + '</td>');
+			//row.append('<td>' + task.assigned_to + '</td>');
 			row.append('<td><form class="task-set-complete-form" action="{% url tasks-task_set_completed %}" method="post"><input type="hidden" name="task_id" value="' + task.id + '" /><input type="hidden" name="completed" value="1" /><input type="submit" value="*" /></form></td>');
 			row.append('<td><form class="task-set-complete-form" action="{% url tasks-task_delete %}" method="post"><input type="hidden" name="task_id" value="' + task.id + '" /><input type="submit" value="x" /></form></td>');
 			
@@ -156,8 +155,8 @@ $(document).ready(function() {
 				<th>Task</th> 
 				<th>Created</th> 
 				<th>Due on</th>
-				<th>Owner</th>
-				<th>Assigned</th>              
+				<!--<th>Owner</th>
+				<th>Assigned</th>-->
 	 
 				{% ifequal list_slug "mine" %}
 				<th>List</th>   
@@ -177,8 +176,8 @@ $(document).ready(function() {
 						{{ task.date_due|date:"m/d/Y" }}  
 					{% if task.is_overdue %}</span>{% endif %}	                
 					</td>
-					<td>{{ task.created_by }}</td> 
-					<td>{{ task.assigned_to }}</td>            
+					<!--<td>{{ task.created_by }}</td> 
+					<td>{{ task.assigned_to }}</td>-->
 					{% ifequal list_slug "mine" %}
 					<td><a href="{% url todo-incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
 					{% endifequal %}
@@ -208,9 +207,7 @@ $(document).ready(function() {
         <tr>
             <th>Task</th> 
             <th>Created</th> 
-            <th>Completed on</th>   
-            <th>Note</th>   
-            <th>Comm</th>            
+            <th>Completed on</th>        
             {% ifequal list_slug "mine" %}
             <th>List</th>   
              {% endifequal %} 
@@ -223,9 +220,7 @@ $(document).ready(function() {
 	        <tr class="{% cycle 'row1' 'row2' %}" id="task_{{ task.id }}">     
 	            <td><a href="{% url todo-task_detail task.id %}">{{ task.name|truncatewords:20 }}</a></td> 
 	            <td>{{ task.date_created|date:"m/d/Y" }}</td> 
-	            <td>{{ task.date_completed|date:"m/d/Y" }}</td>	     
-	            <td style="text-align:center;">{% if task.note %}&asymp;{% endif %} </td>
-	            <td style="text-align:center;">{% ifnotequal task.comment_set.all.count 0  %}{{ task.comment_set.all.count }}{% endifnotequal %}
+	            <td>{{ task.date_completed|date:"m/d/Y" }}</td>	
 	               
 	            <td>
 					<form class="task-set-complete-form" action="{% url tasks-task_set_completed %}" method="post">
