@@ -1,10 +1,12 @@
+{% load shorturl %}
 <div id="task-overview">
 	<h2>{{ task.name }}</h2>
 	<h3>{{ task.summary }}</h3>
+	<p>Short URL: <a href="{% shorturl task %}">{% shorturl task %}</a></p>
 	<a href="{% url tasks-task_edit task.id %}">Edit Task</a> (assuming you have permission)
 	<br /><br />
 	<ul>
 		<li>Points: <b>{{ task.points }}</b>{% if task.max_points %}({{ task.max_points }} per person){% endif %}</li>
-		<li>Limit: {{ task.limit }} ({% if task.limit_per_user %}{{ task.limit_per_user }} per person){% endif %}</li>
+		<li>Remaining: {{ task.get_chances_remaining }} ({% if task.limit_per_user %}{{ task.limit_per_user }} per person){% endif %}</li>
 	</ul>
 </div>

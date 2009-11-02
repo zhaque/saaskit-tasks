@@ -249,7 +249,7 @@ def task_detail(request, object_id):
 	remaining = 0
 	if request.user.is_authenticated():
 		completed = request.user.achievements.filter(task=task, complete=True)
-		remaining = task.limit_per_user - completed.count()
+		remaining = task.get_chances_remaining(request.user)
 		try:
 			started = request.user.achievements.get(task=task, complete=False)
 		except Achievement.DoesNotExist:
