@@ -1,0 +1,12 @@
+{% extends "todo/base.html" %}
+
+{% block title %}New Task{% endblock %}
+
+{% block content %}
+<form action="." method="post">
+	{{ form.as_p }}
+	<input type="hidden" name="project" value="{{ request.REQUEST.project }}" />
+	<input type="hidden" name="type" value="{{ request.REQUEST.type }}" />
+	<input type="submit" value="Create" />
+</form>	
+{% endblock %}

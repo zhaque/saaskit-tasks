@@ -6,9 +6,15 @@ from .util import serialize, deserialize
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
 
+class TaskType:
+	POLL = 1
+	QUIZ = 2
+	POST = 3
+
 TASK_TYPES = (
-	(1, 'poll'),
-	(2, 'quiz'),
+	(TaskType.POLL, 'poll'),
+	(TaskType.QUIZ, 'quiz'),
+	(TaskType.POST, 'post'),
 )
 
 class IncompleteTaskManager(models.Manager):
@@ -88,7 +94,9 @@ class Task(models.Model):
 		r = self.get_type_display()
 		rl = r.lower()
 		if rl in ['poll','quiz']:
-			r += ': %s' % self.data['question']
+			r += u': %s' % self.data['question']
+		elif rl == 'post':
+			r += u': %s' % self.data['service']
 		return r
 	
 	@property

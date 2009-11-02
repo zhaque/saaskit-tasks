@@ -11,9 +11,9 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from .models import Task, Project, Comment, Attachment, Achievement
-from .forms import AddProjectForm, AddItemForm, EditItemForm
-from .util import render_to, redirect_to, serialize_to
+from .models import Task, Project, Comment, Attachment, Achievement, TaskType
+from .forms import *
+from .util import render_to, redirect_to, serialize_to, yql, TASK_POST_YQL
 import datetime
 
 # Need for links in email templates
@@ -132,7 +132,7 @@ def project_detail(request, object_id = 0, view_completed=0):
 		completed_list = Task.objects.filter(assigned_to=request.user, completed=1)
 
 	if request.POST.getlist('add_task') :
-		form = AddItemForm(request.POST,initial={
+		form = AddTaskForm(request.POST,initial={
 		'assigned_to':request.user.id,
 		'priority':999,
 		'project':project.id,
@@ -160,7 +160,7 @@ def project_detail(request, object_id = 0, view_completed=0):
 
 	else:
 		#if object_id: # We don't allow adding a task on the "mine" view
-		form = AddItemForm(initial={
+		form = AddTaskForm(initial={
 			'assigned_to':request.user.id,
 			'priority':999,
 			'project':project.id,
@@ -174,12 +174,40 @@ def project_detail(request, object_id = 0, view_completed=0):
 	auth_ok = 1
 	list_slug = 'null'
 	return locals()
+	
+@render_to('tasks/task_create.html')
+@login_required
+def task_create(request):
+	typ = int(request.REQUEST['type'])
+	
+	if typ == TaskType.POLL:
+		form_class = NewPollTaskForm
+		
+	elif typ == TaskType.QUIZ:
+		form_class = NewQuizTaskForm
+		
+	elif typ == TaskType.POST:
+		form_class = NewPostTaskForm
+		
+	else:
+		form_class = AddTaskForm # TODO: get based on typ
+	
+	if request.method == 'POST':
+		form = form_class(request.POST)
+		
+		if form.is_valid():
+			# Save task first so we have a db object to play with
+			task = form.save()
+			return redirect_to('tasks-task_detail', task.id)
+	else:
+		form = form_class()
+	return {'form':form}
 
 @serialize_to
 @login_required
 def task_new(request):
 	if request.method == 'POST':
-		form = AddItemForm(request.POST)
+		form = AddTaskForm(request.POST)
 		
 		if form.is_valid():
 			# Save task first so we have a db object to play with
@@ -188,10 +216,13 @@ def task_new(request):
 			d = {}
 			
 			# TODO: extra fields for configuring tasks
-			tt = task.get_type_display().lower()
-			if tt in ['poll','quiz']:
+			tt = task.type
+			if tt in [TaskType.POLL, TaskType.QUIZ]:
 				d['question'] = 'What is the answer to life, the universe, and everything?'
 				d['answers'] = [{'text':'Pizza','count':0}, {'text':'42', 'count':0}, {'text':'I simply haven\'t a clue', 'count':0}]
+			elif tt == TaskType.POST:
+				d['service'] = 'twitter'
+				d['message'] = 'Tweet! Tweet! Tweet!'
 				
 			task.data = d
 			task.save()
@@ -205,7 +236,7 @@ def task_new(request):
 			#	return HttpResponseRedirect(request.path)
 		
 		else:
-			form = AddItemForm()
+			form = AddTaskForm()
 	#if request.is_ajax():
 	return HttpResponse('Invalid Request')
 	#else:
@@ -252,13 +283,25 @@ def task_do(request, object_id):
 	
 	if request.method == 'POST':
 		try:
-			typ = task.get_type_display().lower()
+			typ = task.type
 			data = task.data
 			save = False
-			if typ == 'poll':
+			if typ == TaskType.POLL:
 				choice = int(request.POST['choice'])
 				data['answers'][choice]['count'] += 1
 				save = True
+				
+			elif typ == TaskType.QUIZ:
+				choice = int(request.POST['choice'])
+				if choice != data['answer']:
+					request.user.message_set.create(message='Sorry, you answered incorrectly.')
+					achievement.delete()
+					return redirect_to('tasks-task_detail', task.id)
+				
+			elif typ == TaskType.POST:
+				d = {'username':request.POST['username'], 'password':request.POST['password'], 'message':data['message']}
+				q = TASK_POST_YQL[data['service']] % d
+				r = yql(q)
 				
 			if save:
 				task.data = data
@@ -267,12 +310,14 @@ def task_do(request, object_id):
 			achievement.complete = True
 			achievement.save()
 			
+			request.user.message_set.create(message='You earned %s points. How exciting!' % task.points)
+			
 			return redirect_to('tasks-task_detail', task.id)
 			
 		except KeyError, e:
 			request.user.message_set.create(message='Error: Please complete all required fields')
-		#except Exception, e:
-		#	request.user.message_set.create(message='Error: Something went wrong, try again later')
+		except Exception, e:
+			request.user.message_set.create(message='Error: Something went wrong, try again later')
 	else:
 		pass
 	return {'task':task, 'data':task.data, 'template':'tasks/form/%s.html' % task.get_type_display().lower()}

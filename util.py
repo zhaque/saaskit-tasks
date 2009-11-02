@@ -5,8 +5,12 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 import simplejson, datetime, urllib, urllib2
 
-YQL_URL = getattr(settings, 'YQL_URL', 'http://query.yahooapis.com/v1/public/yql')
+YQL_URL = getattr(settings, 'YQL_URL', 'https://query.yahooapis.com/v1/public/yql')
 YQL_ENV = getattr(settings, 'YQL_ENV', 'http://datatables.org/alltables.env')
+
+TASK_POST_YQL = {
+	'twitter':'insert into twitter.status (status,username,password) values ("%(message)s","%(username)s","%(password)s")'
+}
 
 def yql(query):
 	data = {

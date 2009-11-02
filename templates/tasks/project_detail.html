@@ -63,7 +63,6 @@ function initContent(obj) {
 
 $(document).ready(function() {
 	$('#save-task-button').click(save_new_task);
-	$('#id_date_due').datepicker({defaultDate: new Date({{thedate.year}}, {{thedate.month}} - 1, {{thedate.day}}),});
 	
 	//$('.mark_done').click(task_set_completed);
 	initContent('body');
@@ -109,9 +108,20 @@ $(document).ready(function() {
 
    {% ifequal auth_ok 1 %}
    
+   <form id="new-task-form" action="{% url tasks-task_create %}" method="get">
+		<select name="type">
+			<option value="1">Poll</option>
+			<option value="2">Quiz</option>
+			<option value="3">Post</option>
+		</select>
+		<input type="hidden" name="project" value="{{ project.id }}" />
+		<input type="submit" value="Add Task">	    
+  </form>
+	  
+	  {% comment %}
    {# Only show task adder if viewing a proper list #}
    {% ifnotequal list_slug "mine" %}
-   <form id="new-task-form" action="" method="POST">
+   <form id="new-task-form" action="." method="POST">
    <h2 style="margin-bottom:0px;" id="slideToggle" >&rarr; Click to add task &larr;</h2>
    
    <div id="AddTask">	    
@@ -120,7 +130,9 @@ $(document).ready(function() {
 	    <p><input type="submit" id="save-task-button" name="add_task" value="Add task" class="todo-button"></p>
     </div>	    
 	   </form>
+	   
         {% endifnotequal %}
+	  {% endcomment %}
         
         
 <br /><br />
