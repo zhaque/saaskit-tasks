@@ -8,9 +8,12 @@ def _json_encode(obj):
 	if isinstance(obj, datetime.datetime):
 		return obj.strftime('%b %d, %Y %H:%M:%S')
 
+def deserialize(r):
+	return simplejson.loads(r)
+
 def serialize(r):
 	for name, obj in r.items():
-		if obj.__class__ != type:
+		if hasattr(obj, '__dict__'):
 			data = {}
 			for attr, val in obj.__dict__.items():
 				if attr.startswith('_'):

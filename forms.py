@@ -28,7 +28,10 @@ class AddItemForm(forms.ModelForm):
 					
 	name = forms.CharField(
 					widget=forms.widgets.TextInput(attrs={'size':35})
-					) 
+					)
+					
+	project = forms.ModelChoiceField(queryset=Project.objects.all(), widget=forms.HiddenInput)
+	priority = forms.IntegerField(widget=forms.HiddenInput)
 
 	# The picklist showing the users to which a new task can be assigned
 	# must find other members of the groups the current list belongs to.
@@ -39,7 +42,7 @@ class AddItemForm(forms.ModelForm):
 		
 	class Meta:
 		model = Task
-		exclude = ('points',)
+		exclude = ('completed', 'description', 'raw_data', 'date_completed')
 		
 
 

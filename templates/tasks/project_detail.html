@@ -114,29 +114,7 @@ $(document).ready(function() {
    <h2 style="margin-bottom:0px;" id="slideToggle" >&rarr; Click to add task &larr;</h2>
    
    <div id="AddTask">	    
-	    <table class="nocolor" border="0" cellspacing="5" cellpadding="5">
-	       <tr>
-	           <td>{{ form.name.errors }}</td>
-	           <td>{{ form.due_date.errors }}</td>
-	       </tr>
-	       <tr>
-	           <td><label for="id_name">Task:</label> {{ form.name }}</td>
-	           <td><label for="id_date_due">Due date:</label> {{ form.date_due }}</td>
-	           <td><label for="id_assigned">Assign to:</label> {{ form.assigned_to }}</td>
-	           <td><label for="id_notify">Notify:</label> <input type="checkbox" checked="checked" name="notify" value="1" id="notify"></td>
- 	       </tr>
-		   {% comment %}
-	       <tr>
-	           <td colspan="5"><label for="id_note">Note:</label> {{ form.note }}
-	               <p class="minor">*Email notifications will only be sent if task is assigned to someone besides yourself.</p>
-	           </td>
- 	       </tr>
-		   {% endcomment %}
-	    </table>
-		
-		<input type="hidden" name="project" value="{{ form.initial.project }}" id="id_project" />
-        <input type="hidden" name="priority" value="999" id="id_priority" />
-        <input type="hidden" name="created_by" value="{{ request.user.id }}" id="id_created_by" />
+		{{ form.as_p }}
 	    
 	    <p><input type="submit" id="save-task-button" name="add_task" value="Add task" class="todo-button"></p>
     </div>	    
@@ -153,10 +131,8 @@ $(document).ready(function() {
 		<thead>
 			<tr>            
 				<th>Task</th> 
-				<th>Created</th> 
-				<th>Due on</th>
-				<!--<th>Owner</th>
-				<th>Assigned</th>-->
+				<th>Starts</th> 
+				<th>Ends</th>
 	 
 				{% ifequal list_slug "mine" %}
 				<th>List</th>   
@@ -174,10 +150,8 @@ $(document).ready(function() {
 					<td>
 					{% if task.is_overdue %}<span class="overdue">{% endif %}
 						{{ task.date_due|date:"m/d/Y" }}  
-					{% if task.is_overdue %}</span>{% endif %}	                
+					{% if task.is_overdue %}</span>{% endif %}
 					</td>
-					<!--<td>{{ task.created_by }}</td> 
-					<td>{{ task.assigned_to }}</td>-->
 					{% ifequal list_slug "mine" %}
 					<td><a href="{% url todo-incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
 					{% endifequal %}
@@ -206,8 +180,8 @@ $(document).ready(function() {
 	<table border="0"  id="tasktable">	
         <tr>
             <th>Task</th> 
-            <th>Created</th> 
-            <th>Completed on</th>        
+            <th>Started</th> 
+            <th>Ends on</th>
             {% ifequal list_slug "mine" %}
             <th>List</th>   
              {% endifequal %} 

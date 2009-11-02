@@ -215,9 +215,9 @@ def task_new(request):
 	#	return HttpResponseRedirect(request.path)
 		
 
-@render_to('tasks/task_detail.html')
+@render_to('tasks/task_edit.html')
 @login_required
-def task_detail(request, object_id):
+def task_edit(request, object_id):
 	task = get_object_or_404(Task, pk=object_id)
 	
 	if request.method == 'POST' and 'attachment' in request.FILES:
@@ -253,27 +253,6 @@ def task_detail(request, object_id):
 						 body=request.POST['comment-body'],
 					 )
 					 c.save()
-					
-					 # And email comment to all people who have participated in this thread.
-					 email_subject = render_to_string("todo/email/assigned_subject.txt", { 'task': task })					
-					 email_body = render_to_string("todo/email/newcomment_body.txt", { 'task': task, 'body':request.POST['comment-body'], 'site': current_site, 'user':request.user })
-
-					 # Get list of all thread participants - task creator plus everyone who has commented on it.
-					 recip_list = []
-					 recip_list.append(task.created_by.email)
-					 commenters = Comment.objects.filter(task=task)
-					 for c in commenters:
-						 recip_list.append(c.author.email)
-					 # Eliminate duplicate emails with the Python set() function
-					 recip_list = set(recip_list)
-					 
-					 # Send message
-					 try:
-						send_mail(email_subject, email_body, task.created_by.email, recip_list, fail_silently=False)
-						request.user.message_set.create(message="Comment sent to thread participants.")
-					 except:
-						request.user.message_set.create(message="Comment saved but mail not sent. Contact your administrator." )
-					
 				 
 				 request.user.message_set.create(message="The task has been edited.")
 				 return HttpResponseRedirect(reverse('todo-incomplete_tasks', args=[task.list.id, task.list.slug]))

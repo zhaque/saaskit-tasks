@@ -2,8 +2,14 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 import datetime
+from .util import serialize, deserialize
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
+
+TASK_TYPES = (
+	(1, 'Poll'),
+	(2, 'Quiz'),
+)
 
 class IncompleteTaskManager(models.Manager):
 	def get_query_set(self):
@@ -38,21 +44,37 @@ class Task(models.Model):
 	
 	name = models.CharField(max_length=140)
 	description = models.TextField(blank=True)
+	type = models.IntegerField(choices=TASK_TYPES)
+	
 	points = models.IntegerField(default=0)
+	max_points = models.IntegerField(default=0)
+	
+	limit = models.IntegerField(default=100)
+	limit_per_user = models.IntegerField(default=1)
+	
+	reserve_time = models.IntegerField(help_text='in minutes', default=2)
 	
 	priority = models.PositiveIntegerField(max_length=3, default=0)
-	completed = models.BooleanField()
+	#active = models.BooleanField(default=True)
+	completed = models.BooleanField(default=False)
 	
 	date_created = models.DateField(auto_now_add=True)
 	date_due = models.DateField(blank=True,null=True)
 	date_completed = models.DateField(blank=True,null=True)
-	
-	created_by = models.ForeignKey(User, related_name='created_by')
-	assigned_to = models.ForeignKey(User, related_name='todo_assigned_to')
 		
 	# Custom manager lets us do things like Item.completed_tasks.all()
 	objects = models.Manager()
 	incomplete = IncompleteTaskManager()
+	
+	raw_data = models.TextField(default='{}')
+	
+	def get_data(self):
+		return deserialize(self.raw_data)
+		
+	def set_data(self, v):
+		self.raw_data = serialize(v)
+	
+	data = property(get_data, set_data)
 	
 	@property
 	def is_overdue(self):
