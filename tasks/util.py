@@ -64,6 +64,8 @@ def render_to(template=''):
 			if isinstance(r, HttpResponse):
 				return r
 			else:
+				if 'template' in r:
+					t = r['template']
 				c = RequestContext(request, r)
 				return render_to_response(t, context_instance=c)
 		return fn

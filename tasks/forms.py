@@ -11,12 +11,13 @@ class AddProjectForm(forms.ModelForm):
 	# The picklist showing allowable groups to which a new list can be added
 	# determines which groups the user belongs to. This queries the form object
 	# to derive that list.
+	
 	def __init__(self, request, *args, **kwargs):
 		super(AddProjectForm, self).__init__(*args, **kwargs)
 
 	class Meta:
 		model = Project
-		exclude = ('slug',)
+		exclude = ('slug','user')
 		
  
 		
@@ -43,16 +44,18 @@ class AddTaskForm(forms.ModelForm):
 		
 	class Meta:
 		model = Task
-		exclude = ('priority', 'completed', 'description', 'raw_data', 'date_completed')
+		exclude = ('user','initial_budget', 'priority', 'completed', 'description', 'raw_data', 'date_completed')
 		
 class NewPollTaskForm(AddTaskForm):
 	question = forms.CharField()
 	answers = forms.CharField(help_text='One answer per line.', widget=forms.Textarea)
+	multiple = forms.BooleanField(label='Allow Multiple Answers?', required=False)
 	
 	def save(self, *args, **kwargs):
 		obj = super(NewPollTaskForm, self).save(commit=False)
 		d = {}
 		d['question'] = self.cleaned_data['question']
+		d['multiple'] = self.cleaned_data['multiple']
 		d['answers'] = []
 		for line in self.cleaned_data['answers'].splitlines():
 			line = line.strip()
@@ -102,6 +105,20 @@ class NewPostTaskForm(AddTaskForm):
 		d = {}
 		d['service'] = self.cleaned_data['service']
 		d['message'] = self.cleaned_data['message']
+		obj.data = d
+		obj.save()
+		return obj
+		
+class NewQuestionTaskForm(AddTaskForm):
+	question = forms.CharField()
+	length = forms.ChoiceField(label='Answer Length', choices=[(i,i) for i in ('short','medium', 'long')])
+	
+	def save(self, *args, **kwargs):
+		obj = super(NewQuestionTaskForm, self).save(commit=False)
+		d = {}
+		d['question'] = self.cleaned_data['question']
+		d['length'] = self.cleaned_data['length']
+		d['answers'] = []
 		obj.data = d
 		obj.save()
 		return obj

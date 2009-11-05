@@ -3,7 +3,9 @@
 	<h2>{{ task.name }}</h2>
 	<h3>{{ task.summary }}</h3>
 	<p>Short URL: <a href="{% shorturl task %}">{% shorturl task %}</a></p>
-	<a href="{% url tasks-task_edit task.id %}">Edit Task</a> (assuming you have permission)
+	{% ifequal request.user task.user %}
+	Admin: <a href="{% url tasks-task_stats task.id %}">View Results</a> | <a href="{% url tasks-task_edit task.id %}">Edit Task</a>
+	{% endifequal %}
 	<br /><br />
 	<ul>
 		<li>Points: <b>{{ task.points }}</b>{% if task.max_points %}({{ task.max_points }} per person){% endif %}</li>

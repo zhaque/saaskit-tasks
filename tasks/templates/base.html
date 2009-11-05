@@ -1,0 +1,18 @@
+<html>
+	<head>
+		<title>{% block title %}{% endblock %}</title>
+		{% block base_head %}{% endblock %}
+		<link type="text/css" href="/saas/static/css/reset.css" rel="stylesheet" />
+	</head>
+	<body style="padding:15px">
+		{% if messages %}
+		<ul class="messages">
+			{% for message in messages %}
+			<li>{{ message }}</li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+		{% block base_content %}
+		{% endblock %}
+	</body>
+</html>

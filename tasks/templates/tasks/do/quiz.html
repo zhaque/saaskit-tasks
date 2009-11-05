@@ -1,6 +1,10 @@
+{% extends "tasks/do/base.html" %}
+
+{% block form %}
 <b>{{ data.question }}</b>
 <ul>
 	{% for answer in data.answers %}
 	<li><input type="radio" name="choice" value="{{ forloop.counter0 }}" /><label>{{ answer.text }}</label></li>
 	{% endfor %}
 </ul>
+{% endblock %}

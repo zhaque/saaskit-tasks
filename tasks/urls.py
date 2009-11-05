@@ -3,13 +3,15 @@ from django.views.generic.simple import direct_to_template
 from django.contrib.auth import views as auth_views
 
 urlpatterns = patterns('tasks.views',
-	url(r'^$', 'project_list', name='tasks-index'),
+	url(r'^$', 'task_index', name='tasks-index'),
+	url(r'^admin/$', 'project_list', name='tasks-projects'),
 	#url(r'^mine/$', 'project_detail', {}, name="tasks-home"),
 	url(r'^task/new/$', 'task_new', name='tasks-task_new'),
 	url(r'^task/create/$', 'task_create', name='tasks-task_create'),
 	url(r'^task/(?P<object_id>\d{1,6})/$', 'task_detail', name='tasks-task_detail'),
 	url(r'^task/(?P<object_id>\d{1,6})/do/$', 'task_do', name='tasks-task_do'),
 	url(r'^task/(?P<object_id>\d{1,6})/edit/$', 'task_edit', name='tasks-task_edit'),
+	url(r'^task/(?P<object_id>\d{1,6})/stats/$', 'task_stats', name='tasks-task_stats'),
 	url(r'^project/(?P<object_id>\d{1,4})/$', 'project_detail', name='tasks-project_incomplete_tasks'),
 	url(r'^project/(?P<object_id>\d{1,4})/completed/$', 'project_detail', {'view_completed':1}, name='tasks-project_complete_tasks'),    
 	url(r'^project/(?P<object_id>\d{1,4})/delete/$', 'project_delete', name="tasks-project_delete"),

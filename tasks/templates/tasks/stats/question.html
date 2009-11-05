@@ -1,0 +1,10 @@
+{% extends "tasks/stats/base.html" %}
+
+{% block stats %}
+<div class="title">{{ data.question }}</div>
+<ul>
+	{% for answer in data.answers %}
+	<li>{{ answer }}</li>
+	{% endfor %}
+</ul>
+{% endblock %}

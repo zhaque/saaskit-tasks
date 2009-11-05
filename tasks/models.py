@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 import datetime
 from .util import serialize, deserialize
+from prepaid.models import UnitPack
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
 
@@ -10,18 +11,26 @@ class TaskType:
 	POLL = 1
 	QUIZ = 2
 	POST = 3
+	QUESTION = 4
 
 TASK_TYPES = (
 	(TaskType.POLL, 'poll'),
 	(TaskType.QUIZ, 'quiz'),
 	(TaskType.POST, 'post'),
+	(TaskType.QUESTION, 'question'),
 )
+
+class CompleteObjectManager(models.Manager):
+	def get_query_set(self):
+		return super(CompleteObjectManager, self).get_query_set().filter(complete=True)
+
 
 class IncompleteTaskManager(models.Manager):
 	def get_query_set(self):
 		return super(IncompleteTaskManager, self).get_query_set().filter(completed=0)
 
 class Project(models.Model):
+	user = models.ForeignKey(User)
 	name = models.CharField(max_length=60)
 	slug = models.SlugField(max_length=60, blank=True)
 	type = models.IntegerField(choices=TASKS_LIST_TYPES)
@@ -46,6 +55,7 @@ class Project(models.Model):
 
 		
 class Task(models.Model):
+	user = models.ForeignKey(User)
 	project = models.ForeignKey('Project', blank=True, null=True, related_name='tasks')
 	
 	name = models.CharField(max_length=140)
@@ -53,7 +63,8 @@ class Task(models.Model):
 	type = models.IntegerField(choices=TASK_TYPES)
 	
 	points = models.IntegerField(default=0)
-	max_points = models.IntegerField(default=0)
+	budget = models.IntegerField(default=0)
+	initial_budget = models.IntegerField(default=0)
 	
 	limit = models.IntegerField(default=100)
 	limit_per_user = models.IntegerField(default=1)
@@ -83,23 +94,30 @@ class Task(models.Model):
 	data = property(get_data, set_data)
 	
 	def get_chances_remaining(self, user=None):
-		r = self.limit - self.achievements.count()
+		limit = self.limit - self.achievements.count()
+		if self.points:
+			point_limit = self.budget // self.points
+			limit = min(limit, point_limit)
 		if user:
-			ur = self.limit_per_user - self.achievements.filter(user=user).count()
-			return min(r, ur)
-		return r
+			per_user_rem = self.limit_per_user - self.achievements.filter(user=user).count()
+			return min(limit, per_user_rem)
+		return limit
 		
 	@models.permalink
 	def get_absolute_url(self):
 		return ('tasks-task_detail', [str(self.id)])
 	
 	@property
+	def completions(self):
+		return self.achievements.filter(complete=True)
+	
+	@property
 	def summary(self):
-		r = self.get_type_display()
-		rl = r.lower()
-		if rl in ['poll','quiz']:
+		r = self.get_type_display().title()
+		rl = self.type
+		if rl in [TaskType.POLL,TaskType.QUIZ, TaskType.QUESTION]:
 			r += u': %s' % self.data['question']
-		elif rl == 'post':
+		elif rl == TaskType.POST:
 			r += u': %s' % self.data['service']
 		return r
 	
@@ -110,7 +128,14 @@ class Task(models.Model):
 	def __unicode__(self):
 		return self.name
 		
+	def delete(self):
+		if self.budget > 0:
+			UnitPack.credit(self.user, self.budget)
+		super(Task, self).delete()
+		
 	def save(self):
+		if not self.id:
+			self.initial_budget = self.budget
 		if self.completed and not self.date_completed:
 			self.date_completed = datetime.datetime.now()
 		super(Task, self).save()
@@ -121,9 +146,7 @@ class Task(models.Model):
 		verbose_name_plural = getattr(settings, 'TASKS_TASK_NAME_PLURAL', verbose_name + 's')
 
 class Attachment(models.Model):
-	user = models.ForeignKey(User)
 	task = models.ForeignKey('Task', related_name='attachments')
-	created_date = models.DateTimeField(auto_now_add=True)
 	file = models.FileField(upload_to='attachments/')
 	
 	def __unicode__(self):
@@ -134,6 +157,9 @@ class Achievement(models.Model):
 	task = models.ForeignKey('Task', related_name='achievements')
 	date_started = models.DateTimeField(auto_now_add=True)
 	complete = models.BooleanField(default=False)
+	
+	objects = models.Manager()
+	completed = CompleteObjectManager()
 	
 	def __unicode__(self):
 		return self.task.name

@@ -1,4 +1,4 @@
-{% extends "todo/base.html" %}
+{% extends "tasks/base.html" %}
 
 
 {% block title %}{{ task.name }}{% endblock %}
@@ -10,7 +10,6 @@
 
 <div id="task-form">
 	{% if request.user.is_authenticated %}
-		You are signed in as <b>{{ request.user }}</b>.<br />
 		{% if completed.count %}
 			You have completed this task {{ completed.count }} time{{ completed.count|pluralize }}.<br />
 		{% endif %}

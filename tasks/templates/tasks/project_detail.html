@@ -1,4 +1,4 @@
-{% extends "todo/base.html" %}
+{% extends "tasks/base.html" %}
 
 {% block title %}{{ list.name }} - Project Status{% endblock %}
 
@@ -58,7 +58,7 @@ function hide_before_submit(data, form) {
 
 function initContent(obj) {
 	obj = $(obj);
-	obj.find('.task-set-complete-form').ajaxForm({beforeSubmit:hide_before_submit, dataType:'json'});
+	//obj.find('.task-set-complete-form').ajaxForm({beforeSubmit:hide_before_submit, dataType:'json'});
 }
 
 $(document).ready(function() {
@@ -111,8 +111,9 @@ $(document).ready(function() {
    <form id="new-task-form" action="{% url tasks-task_create %}" method="get">
 		<select name="type">
 			<option value="1">Poll</option>
-			<option value="2">Quiz</option>
+			{#<option value="2">Quiz</option>#}
 			<option value="3">Post</option>
+			<option value="4">Question</option>
 		</select>
 		<input type="hidden" name="project" value="{{ project.id }}" />
 		<input type="submit" value="Add Task">	    
@@ -151,7 +152,7 @@ $(document).ready(function() {
 				<th>List</th>   
 				 {% endifequal %}            
 							
-				<th>Done</th> 		 
+				{#<th>Done</th>#}
 				<th>Del</th>             
 			</tr>
 		</thead>
@@ -168,7 +169,8 @@ $(document).ready(function() {
 					{% ifequal list_slug "mine" %}
 					<td><a href="{% url tasks-project_incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
 					{% endifequal %}
-						   
+					
+					{% comment %}
 					<td>
 						<form class="task-set-complete-form" action="{% url tasks-task_set_completed %}" method="post">
 							<input type="hidden" name="task_id" value="{{ task.id }}" />
@@ -176,6 +178,8 @@ $(document).ready(function() {
 							<input type="submit" value="*" class="mark_done" />
 						</form>
 					</td>
+					{% endcomment %}
+					
 					<td><form class="task-set-complete-form" action="{% url tasks-task_delete %}" method="post">
 						<input type="hidden" name="task_id" value="{{ task.id }}" />
 						<input type="submit" value="x"/>

@@ -15,6 +15,17 @@ ul.messages li {
     color: gray;
 }
 
+a {
+	text-decoration:none;
+}
+a:hover {
+	text-decoration:underline;
+}
+
+a, a:visited {
+	color:blue;
+}
+
 a.todo {
     text-decoration:none;
     color:#474747;
@@ -93,16 +104,26 @@ table#tasktable tr.row2 {
 *              New                  *
 ************************************/
 
+#base-content {
+	margin:10px;
+}
+
+#base-header {
+	padding:10px;
+	background-color: #9BFBA9;
+	border:1px solid #36DE53;
+	margin-bottom:10px;
+}
+
 #task-overview {
 	padding:10px;
-	margin:10px;
 	background-color: #FCE593;
 	border:1px solid #F7D55B;
+	margin-bottom:20px;
 }
 
 #task-form {
 	padding:10px;
-	margin:10px;
 	background-color: #B8CFD8;
 	border:1px solid #A8A8B5;
 }

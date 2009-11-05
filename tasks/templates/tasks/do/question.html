@@ -1,0 +1,18 @@
+{% extends "tasks/do/base.html" %}
+
+{% block form %}
+<div class="title">{{ data.question }}</div>
+<div class="form">
+	{% ifequal data.length "short" %}
+	<input type="text" name="answer" />
+	{% endifequal %}
+	
+	{% ifequal data.length "medium" %}
+	<textarea name="answer" cols="40" rows="5"></textarea>
+	{% endifequal %}
+	
+	{% ifequal data.length "long" %}
+	<textarea name="answer" cols="40" rows="15"></textarea>
+	{% endifequal %}
+</div>
+{% endblock %}

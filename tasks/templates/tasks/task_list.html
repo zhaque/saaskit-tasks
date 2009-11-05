@@ -1,0 +1,25 @@
+{% extends "tasks/base.html" %}
+
+{% block head %}
+<style type="text/css">
+#task-list li {
+	margin:5px;
+	padding:5px;
+	border: 1px solid #CACACA;
+}
+.details {
+	color: #bbb;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<ul id="task-list">
+	{% for task in tasks %}
+	<li>
+		<a href="{% url tasks-task_detail task.id %}">{{ task.name }}</a>
+		<span class="details">{{ task.points }} point{{ task.points|pluralize }}</span>
+	</li>
+	{% endfor %}
+</ul>
+{% endblock %}
