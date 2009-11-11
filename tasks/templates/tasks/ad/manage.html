@@ -25,9 +25,15 @@
 		<input type="submit" value="Post to my Twitter profile" />
 	</form>
 	<br />
-	[MOCKUP]<br />
-	yotweets currently has 513 followers.<br />
-	It will cost 1 point per follower to post to this profile. (513 points)<br />
-	<input type="submit" value="Post to yotweets.com Twitter profile" />
+	<b>{{ site_twitter.user }}</b> currently has <b>{{ site_twitter.followers }}</b> follower{{ site_twitter.followers|pluralize }}.<br />
+	It will cost <b>{{ site_twitter.cost }}</b> point{{ site_twitter.cost|pluralize }} to post to <b>{{ site_twitter.user }}</b>'s profile.
+		{% if site_twitter.cost_variable %}
+			({% if site_twitter.cost_fixed %}{{ site_twitter.cost_fixed }} + {% endif %}{{ site_twitter.cost_variable }} per follower)
+		{% endif %}
+	<br />
+	<form action="." method="post">
+		<input type="hidden" name="global" value="1">
+		<input type="submit" value="Post to yotweets.com Twitter profile" />
+	</form>
 </div>
 {% endblock %}

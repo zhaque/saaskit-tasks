@@ -12,22 +12,33 @@ from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from twitter_app.decorators import oauth_required
+from twitter_app.utils import get_site_twitter_user, get_or_create_twitter_user
+from twitter_app.tweet import global_tweet
+from twitter_app import twython
 from prepaid.models import UnitPack
 from .models import *
 from .forms import *
 from .util import render_to, serialize_to
+from .conf import *
 import datetime
 
 # Need for links in email templates
-current_site = Site.objects.get_current() 
+current_site = Site.objects.get_current()
 
-BUDGET_REASON = 'Budget for "%(task)s"'
-COMPLETED_REASON = 'Completed "%(task)s"'
+def _get_site_twitter_info(activity):
+	r = {}
+	r['user'] = get_site_twitter_user()
+	r['followers'] = r['user'].twitter_profile['followers_count']
+	r['cost_fixed'] = SITE_TWEET_COST_FIXED[activity]
+	r['cost_variable'] = SITE_TWEET_COST_VARIABLE[activity]
+	r['cost'] = r['cost_fixed'] + r['cost_variable'] * r['followers']
+	return r
 
 @render_to('tasks/profile.html')
 def profile(request, username):
-	user = get_object_or_404(User, username=username)
-	return {'profile':user}
+	user = get_or_create_twitter_user(username)
+	info = user.twitter_profile
+	return {'profile':user, 'info':info}
 
 @render_to('tasks/project_list.html')
 @login_required
@@ -532,10 +543,25 @@ def ad_detail(request, object_id):
 @oauth_required
 def ad_manage(request, object_id):
 	ad = get_object_or_404(Advertisement, pk=object_id, user=request.user)
+	site_twitter = _get_site_twitter_info('ad')
+	
 	if request.method == 'POST':
-		request.twitter.set_status(ad.message)
-		request.user.message_set.create(message='Posted to your twitter account')
+		if request.POST.get('global'):
+			cost = site_twitter['cost']
+			need = cost - UnitPack.get_user_credits(request.user)
+			if need <= 0:
+				msg = 'Posted to %s\'s twitter profile' % site_twitter['user']
+				global_tweet(ad.message)
+				if cost > 0:
+					UnitPack.consume(request.user, cost, reason=msg)
+				request.user.message_set.create(message=msg)
+			else:
+				request.user.message_set.create(message='Sorry, you need %s more points' % need)
+		else:
+			request.twitter.set_status(ad.message)
+			request.user.message_set.create(message='Posted to your twitter profile')
 		return redirect('tasks-ad_manage', ad.id)
+		
 	return locals()
 	
 ######################################

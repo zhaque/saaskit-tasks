@@ -156,3 +156,7 @@ a.label {
 	background-color:#76FF7B;
 	opacity: 0.7;
 }
+
+.spacer {
+	clear:both;
+}
