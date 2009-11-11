@@ -107,6 +107,9 @@ table#tasktable tr.row2 {
 #base-content {
 	margin:10px;
 }
+#content > div {
+	padding:10px;
+}
 
 #base-header {
 	padding:10px;
@@ -126,4 +129,30 @@ table#tasktable tr.row2 {
 	padding:10px;
 	background-color: #B8CFD8;
 	border:1px solid #A8A8B5;
+}
+#task-form .task {
+	padding:15px;
+}
+#task-form .title {
+	font-size:1.2em;
+	padding-bottom:15px;
+}
+#task-form .form {
+	padding-bottom:15px;
+}
+#task-form label {
+	font-weight:normal;
+}
+
+.label-list a.selected {
+	font-weight: bold;
+	color:black;
+}
+
+a.label {
+	font-size:0.8em;
+	padding:1px;
+	margin:1px;
+	background-color:#76FF7B;
+	opacity: 0.7;
 }

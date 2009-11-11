@@ -1,0 +1,16 @@
+{% extends "tasks/base.html" %}
+{% load questions %}
+
+{% block title %}{{ task.name }} - Task{% endblock %}
+
+{% block content %}
+{% with 1 as hide_admin %}
+{% include "tasks/task_overview.html" %}
+{% endwith %}
+<p>Completed {{ task.completions.count }} time{{ task.completions.count|pluralize }}</p>
+<ul id="task-form">
+	{% for question in task.questions.all %}
+	<li>{% show_task_question_stats question %}</li>
+	{% endfor %}
+</ul>
+{% endblock %}

@@ -13,14 +13,21 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from twitter_app.decorators import oauth_required
 from prepaid.models import UnitPack
-from .models import Task, Project, Comment, Attachment, Achievement, TaskType
+from .models import *
 from .forms import *
-from .util import render_to, redirect_to, serialize_to
+from .util import render_to, serialize_to
 import datetime
 
 # Need for links in email templates
 current_site = Site.objects.get_current() 
 
+BUDGET_REASON = 'Budget for "%(task)s"'
+COMPLETED_REASON = 'Completed "%(task)s"'
+
+@render_to('tasks/profile.html')
+def profile(request, username):
+	user = get_object_or_404(User, username=username)
+	return {'profile':user}
 
 @render_to('tasks/project_list.html')
 @login_required
@@ -69,18 +76,36 @@ def project_delete(request, object_id):
 		# A var to send to the template so we can show the right thing
 		list_killed = 1
 		
-		return redirect_to('tasks-index')
+		return redirect('tasks-index')
 	else:
 		item_count_done = Task.objects.filter(project=project.id,completed=1).count()
 		item_count_undone = Task.objects.filter(project=project.id,completed=0).count()
-		item_count_total = Task.objects.filter(project=project.id).count()	
+		item_count_total = Task.objects.filter(project=project.id).count()
 	
 	return locals()
 
+@render_to('tasks/control_task_list.html')
+@login_required
+def control_task_list(request):
+	form = TaskListViewForm(request.GET, initial={'completed':False})
+	form.is_valid()
+	view = form.cleaned_data
+	
+	tasks = Activity.objects.filter(user=request.user)
+	
+	if view['completed']:
+		tasks = tasks.filter(completed=True)
+	else:
+		tasks = tasks.filter(completed=False)
+		
+	if view['label']:
+		tasks &= view['label'].activities.all()
+		
+	return {'tasks':tasks, 'view':view}
 
 @render_to('tasks/project_detail.html')
 @login_required
-def project_detail(request, object_id = 0, view_completed=0):
+def project_detail(request, object_id = None, view_completed=0):
 	# TODO: check if user has permission
 		
 	# First check for items in the mark_done POST array. If present, change
@@ -132,14 +157,15 @@ def project_detail(request, object_id = 0, view_completed=0):
 		completed_list = Task.objects.filter(project=project, completed=1)
 		
 	else:
-		task_list = Task.objects.filter(assigned_to=request.user, completed=0)
-		completed_list = Task.objects.filter(assigned_to=request.user, completed=1)
+		project = None
+		task_list = Task.objects.filter(user=request.user, completed=0)
+		completed_list = Task.objects.filter(user=request.user, completed=1)
 
 	if request.POST.getlist('add_task') :
 		form = AddTaskForm(request.POST,initial={
 		'assigned_to':request.user.id,
 		'priority':999,
-		'project':project.id,
+		'project':object_id,
 		})
 		
 		if form.is_valid():
@@ -167,41 +193,43 @@ def project_detail(request, object_id = 0, view_completed=0):
 		form = AddTaskForm(initial={
 			'assigned_to':request.user.id,
 			'priority':999,
-			'project':project.id,
+			'project':object_id,
 			} )
 
 	if request.user.is_staff:
 		can_del = 1
 		
 	list = project
-	listid = list.id
+	listid = object_id
 	auth_ok = 1
 	list_slug = 'null'
+	
 	return locals()
 	
 @render_to('tasks/task_list.html')
 def task_index(request):
-	return {'tasks':Task.objects.all()}
-	
+	return {'tasks':Task.objects.filter(published=True)}
+
 @render_to('tasks/task_create.html')
 @login_required
 def task_create(request):
-	typ = int(request.REQUEST['type'])
-	
-	if typ == TaskType.POLL:
-		form_class = NewPollTaskForm
+	form_class = AddTaskForm
+	try:
+		typ = int(request.REQUEST['type'])
 		
-	elif typ == TaskType.QUIZ:
-		form_class = NewQuizTaskForm
-		
-	elif typ == TaskType.POST:
-		form_class = NewPostTaskForm
-		
-	elif typ == TaskType.QUESTION:
-		form_class = NewQuestionTaskForm
-		
-	else:
-		form_class = AddTaskForm # TODO: get based on typ
+		if typ == TaskType.POLL:
+			form_class = NewPollTaskForm
+			
+		elif typ == TaskType.QUIZ:
+			form_class = NewQuizTaskForm
+			
+		elif typ == TaskType.POST:
+			form_class = NewPostTaskForm
+			
+		elif typ == TaskType.QUESTION:
+			form_class = NewQuestionTaskForm
+	except:
+		pass
 	
 	if request.method == 'POST':
 		form = form_class(request.POST)
@@ -215,11 +243,45 @@ def task_create(request):
 				task.user = request.user
 				task.budget = budget
 				task.save()
-				UnitPack.consume(request.user, budget)
-				return redirect_to('tasks-task_detail', task.id)
+				if task.budget > 0:
+					UnitPack.consume(request.user, budget, reason=BUDGET_REASON % {'task':task.name})
+				return redirect('tasks-task_setup', task.id)
 	else:
 		form = form_class()
 	return {'form':form}
+	
+@render_to('tasks/task_setup.html')
+@login_required
+def task_setup(request, object_id):
+	task = get_object_or_404(Task, pk=object_id, user=request.user, published=False)
+	if request.method == 'POST':
+		if task.questions.count() >= 1:
+			task.published = True
+			task.save()
+			return redirect('tasks-task_manage', task.id)
+		else:
+			request.user.message_set.create(message='You must add at least one question')
+	return locals()
+	
+@render_to('tasks/task/question_add.html')
+@login_required
+def task_question_add(request, object_id):
+	task = get_object_or_404(Task, pk=object_id, user=request.user, published=False)
+	forms = {
+		'poll':NewTaskQuestionPollForm,
+		#'quiz':NewQuizTaskForm,
+		'text':NewTaskQuestionEssayForm,
+	}
+	typ = request.REQUEST['type']
+	form_class = forms[typ]
+	if request.method == 'POST':
+		form = form_class(request, request.POST, initial={'task':task.id, 'type':typ, 'raw_data':'{}'})
+		if form.is_valid():
+			form.save()
+			return redirect('tasks-task_setup', task.id)
+	else:
+		form = form_class(request, initial={'task':task.id, 'type':typ, 'raw_data':'{}'})
+	return locals()
 
 @serialize_to
 @login_required
@@ -262,7 +324,7 @@ def task_new(request):
 
 @render_to('tasks/task_detail.html')
 def task_detail(request, object_id):
-	task = get_object_or_404(Task, pk=object_id)
+	task = get_object_or_404(Task, pk=object_id, published=True)
 	started = completed = None
 	remaining = 0
 	if request.user.is_authenticated():
@@ -277,15 +339,15 @@ def task_detail(request, object_id):
 @render_to()
 @login_required
 def task_stats(request, object_id):
-	task = get_object_or_404(Task, pk=object_id)
+	task = get_object_or_404(Task, pk=object_id, user=request.user)
 	# TODO: permission
 	return {'task':task, 'data':task.data, 'template':'tasks/stats/%s.html' % task.get_type_display().lower()}
 	
-@render_to()
+@render_to('tasks/task/do.html')
 @login_required
 @oauth_required
 def task_do(request, object_id):
-	task = get_object_or_404(Task, pk=object_id)
+	task = get_object_or_404(Task, pk=object_id, published=True)
 	
 	# Create or retrieve achievement
 	achievement = None
@@ -298,7 +360,7 @@ def task_do(request, object_id):
 				achievement.date_started = datetime.datetime.now()
 			else:
 				request.user.message_set.create(message='Sorry, your time to complete this task has run out.')
-				return redirect_to('tasks-task_detail', task.id)
+				return redirect('tasks-task_detail', task.id)
 	except Achievement.DoesNotExist:
 		if remaining > 0:
 			a = Achievement()
@@ -312,49 +374,66 @@ def task_do(request, object_id):
 	
 	if request.method == 'POST':
 		try:
-			typ = task.type
-			data = task.data
-			save = True
-			error = None
-			if typ == TaskType.POLL:
-				choices = map(int, request.POST.getlist('choice'))
-				for choice in choices:
-					data['answers'][choice]['count'] += 1
-				
-			elif typ == TaskType.QUESTION:
-				answer = request.POST['answer'].strip()
-				if len(answer):
-					data['answers'].append(answer)
+			questions = task.questions.all()
+			modified = []
+			errors = []
+			for form_id, question in zip(range(1, questions.count()+1), questions):
+				typ = question.type
+				data = question.data
+				error = None
+				if typ == 'poll':
+					choices = map(int, request.POST.getlist('choice%s' % form_id))
+					for choice in choices:
+						data['answers'][choice]['count'] += 1
+					
+				elif typ == 'text':
+					answer = request.POST['answer%s' % form_id].strip()
+					if len(answer):
+						data['answers'].append(answer)
+					else:
+						error = 'You must answer the question!'
 				else:
-					error = 'You must answer the question!'
+					error = 'Invalid Task'
+				"""
+				elif typ == TaskType.QUIZ:
+					choice = int(request.POST['choice'])
+					if choice != data['answer']:
+						error = 'Sorry, you answered incorrectly.'
+					
+				elif typ == TaskType.POST:
+					request.twitter.set_status(data['message'])
+				"""
 				
-			elif typ == TaskType.QUIZ:
-				choice = int(request.POST['choice'])
-				if choice != data['answer']:
-					error = 'Sorry, you answered incorrectly.'
-				
-			elif typ == TaskType.POST:
-				request.twitter.set_status(data['message'])
-				
+					
+				if error:
+					errors.append(error)
+					question.error = error
+				else:
+					question.data = data
+				modified.append(question)
+					
+			if errors:
+				# FIXME: Delete achievement and form if theres an error??
+				# Maybe it should reload the form with info filled in somehow
+				#achievement.delete()
+				#return redirect('tasks-task_detail', task.id)
+				return {'task':task, 'questions':modified}
 			else:
-				error = 'Invalid Task'
-				
-			if error:
-				request.user.message_set.create(message=error)
-				achievement.delete()
-				return redirect_to('tasks-task_detail', task.id)
-			else:
-				UnitPack.credit(request.user, task.points)
-				achievement.complete = True
-				achievement.save()
-				
-				task.data = data
+				# No errors, yay!
+				for m in modified:
+					m.save()
 				task.budget -= task.points
 				task.save()
 				
-				request.user.message_set.create(message='You earned %s points. How exciting!' % task.points)
+				achievement.complete = True
+				achievement.save()
+				if task.points > 0:
+					UnitPack.credit(request.user, task.points, reason=COMPLETED_REASON % {'task':task.name})
+					request.user.message_set.create(message='You earned %s points. How exciting!' % task.points)
+				else:
+					request.user.message_set.create(message='You didn\'t earn any points. But at least you had fun!')
 				
-				return redirect_to('tasks-task_detail', task.id)
+				return redirect('tasks-task_detail', task.id)
 			
 		except KeyError, e:
 			request.user.message_set.create(message='Error: Please complete all required fields')
@@ -362,7 +441,13 @@ def task_do(request, object_id):
 		#	request.user.message_set.create(message='Error: Something went wrong, try again later')
 	else:
 		pass
-	return {'task':task, 'data':task.data, 'template':'tasks/do/%s.html' % task.get_type_display().lower()}
+	return {'task':task, 'questions':task.questions.all()}
+	
+@render_to('tasks/task/manage.html')
+@login_required
+def task_manage(request, object_id):
+	task = get_object_or_404(Task, pk=object_id, user=request.user, published=True)
+	return locals()
 	
 @render_to('tasks/task_edit.html')
 @login_required
@@ -417,6 +502,61 @@ def task_edit(request, object_id):
 	return locals()
 
 
+######################################
+#                Ads                 #
+######################################
+
+@render_to('tasks/ad/create.html')
+@login_required
+def ad_create(request):
+	if request.method == 'POST':
+		form = NewAdvertisementForm(request.POST)
+		if form.is_valid():
+			ad = form.save(commit=False)
+			ad.user = request.user
+			ad.published = True
+			ad.save()
+			return redirect('tasks-home')
+	else:
+		form = NewAdvertisementForm()
+	return locals()
+	
+def ad_detail(request, object_id):
+	ad = get_object_or_404(Advertisement, pk=object_id)
+	ad.views += 1
+	ad.save()
+	return HttpResponseRedirect(ad.url)
+	
+@render_to('tasks/ad/manage.html')
+@login_required
+@oauth_required
+def ad_manage(request, object_id):
+	ad = get_object_or_404(Advertisement, pk=object_id, user=request.user)
+	if request.method == 'POST':
+		request.twitter.set_status(ad.message)
+		request.user.message_set.create(message='Posted to your twitter account')
+		return redirect('tasks-ad_manage', ad.id)
+	return locals()
+	
+######################################
+#             Classifieds            #
+######################################
+
+@render_to('tasks/classified/create.html')
+@login_required
+def classified_create(request):
+	if request.method == 'POST':
+		form = NewClassifiedForm(request.POST)
+		if form.is_valid():
+			obj = form.save(commit=False)
+			obj.user = request.user
+			obj.published = True
+			obj.save()
+			return redirect('tasks-home')
+	else:
+		form = NewClassifiedForm()
+	return locals()
+	
 ######################################
 #             Ajax Views             #
 ######################################

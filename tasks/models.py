@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
 import datetime
 from .util import serialize, deserialize
 from prepaid.models import UnitPack
@@ -30,7 +32,7 @@ class IncompleteTaskManager(models.Manager):
 		return super(IncompleteTaskManager, self).get_query_set().filter(completed=0)
 
 class Project(models.Model):
-	user = models.ForeignKey(User)
+	user = models.ForeignKey(User, related_name='task_labels')
 	name = models.CharField(max_length=60)
 	slug = models.SlugField(max_length=60, blank=True)
 	type = models.IntegerField(choices=TASKS_LIST_TYPES)
@@ -52,15 +54,67 @@ class Project(models.Model):
 		ordering = ['name']
 		verbose_name = getattr(settings, 'TASKS_PROJECT_NAME', 'Project')
 		verbose_name_plural = getattr(settings, 'TASKS_PROJECT_NAME_PLURAL', verbose_name + 's')
-
 		
-class Task(models.Model):
-	user = models.ForeignKey(User)
-	project = models.ForeignKey('Project', blank=True, null=True, related_name='tasks')
+class Activity(models.Model):
+	user = models.ForeignKey(User, related_name='activities')
 	
 	name = models.CharField(max_length=140)
-	description = models.TextField(blank=True)
-	type = models.IntegerField(choices=TASK_TYPES)
+	views = models.IntegerField(default=0)
+	labels = models.ManyToManyField('Project', blank=True, related_name='activities')
+	
+	published = models.BooleanField(default=False)
+	completed = models.BooleanField(default=False)
+	
+	date_created = models.DateTimeField(auto_now_add=True)
+	date_due = models.DateTimeField('End Date', blank=True,null=True)
+	date_completed = models.DateTimeField(blank=True,null=True)
+	
+	content_type = models.ForeignKey(ContentType, editable=False)
+	derived = generic.GenericForeignKey(fk_field='id')
+	
+	def get_manage_url(self):
+		return '%smanage/' % self.derived.get_absolute_url()
+			
+	def save(self, *args, **kargs):
+		if self.__class__ != Activity:
+			self.content_type = ContentType.objects.get_for_model(self)
+		super(Activity, self).save(*args, **kargs)
+	save.alters_data = True
+	
+	class Meta:
+		ordering = ['-date_created']
+	
+class Advertisement(Activity):
+	text = models.CharField(max_length=140)
+	url = models.URLField()
+	
+	def __unicode__(self):
+		return self.text
+		
+	@models.permalink
+	def get_absolute_url(self):
+		return ('tasks-ad_detail', [str(self.id)])
+	
+	@property
+	def message(self):
+		from shorturls.templatetags.shorturl import ShortURL
+		url = ShortURL.get_shorturl(self)
+		if self.text.find('URL') >= 0:
+			return self.text.replace('URL', url)
+		else:
+			return '%s %s' % (self.text, url)
+			
+class Classified(Activity):
+	title = models.CharField(max_length=140)
+	location = models.CharField(max_length=200, blank=True)
+	zip = models.CharField(max_length=15, blank=True)
+	details = models.TextField(blank=True)
+	
+	def __unicode__(self):
+		return self.title
+		
+class Task(Activity):
+	#type = models.IntegerField(choices=TASK_TYPES, default=0)
 	
 	points = models.IntegerField(default=0)
 	budget = models.IntegerField(default=0)
@@ -71,13 +125,8 @@ class Task(models.Model):
 	
 	reserve_time = models.IntegerField(help_text='in minutes', default=5)
 	
-	priority = models.PositiveIntegerField(max_length=3, default=0)
+	#priority = models.PositiveIntegerField(max_length=3, default=0)
 	#active = models.BooleanField(default=True)
-	completed = models.BooleanField(default=False)
-	
-	date_created = models.DateTimeField(auto_now_add=True)
-	date_due = models.DateTimeField(blank=True,null=True)
-	date_completed = models.DateTimeField(blank=True,null=True)
 		
 	# Custom manager lets us do things like Item.completed_tasks.all()
 	objects = models.Manager()
@@ -106,6 +155,12 @@ class Task(models.Model):
 	@models.permalink
 	def get_absolute_url(self):
 		return ('tasks-task_detail', [str(self.id)])
+		
+	def get_manage_url(self):
+		if self.published:
+			return '%smanage/' % self.derived.get_absolute_url()
+		else:
+			return '%ssetup/' % self.derived.get_absolute_url()
 	
 	@property
 	def completions(self):
@@ -133,17 +188,33 @@ class Task(models.Model):
 			UnitPack.credit(self.user, self.budget)
 		super(Task, self).delete()
 		
-	def save(self):
+	def save(self, *args, **kargs):
 		if not self.id:
 			self.initial_budget = self.budget
 		if self.completed and not self.date_completed:
 			self.date_completed = datetime.datetime.now()
-		super(Task, self).save()
+		super(Task, self).save(*args, **kargs)
 
 	class Meta:
-		ordering = ['priority']
 		verbose_name = getattr(settings, 'TASKS_TASK_NAME', 'Task')
 		verbose_name_plural = getattr(settings, 'TASKS_TASK_NAME_PLURAL', verbose_name + 's')
+		
+class TaskQuestion(models.Model):
+	task = models.ForeignKey(Task, related_name='questions')
+	type = models.CharField(max_length=15)
+	#priority = models.IntegerField(default=0)
+	raw_data = models.TextField(default='{}')
+	
+	def get_data(self):
+		return deserialize(self.raw_data)
+		
+	def set_data(self, v):
+		self.raw_data = serialize(v)
+	
+	data = property(get_data, set_data)
+	
+	class Meta:
+		ordering = ['id']
 
 class Attachment(models.Model):
 	task = models.ForeignKey('Task', related_name='attachments')

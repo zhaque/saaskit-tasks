@@ -1,0 +1,33 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}{{ ad.name }}{% endblock %}
+
+{% block head %}
+<style type="text/css">
+.preview {
+	margin:5px;
+	padding:5px;
+	background-color: #CECECE;
+	border: 1px solid #ADADAD;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="tasks-ad-manage">
+	<h3>{{ ad.name }}</h3>
+	<p class="preview">{{ ad.message|urlize }}</p>
+	<p>Target URL: {{ ad.url|urlize }}</p>
+	<p>Views: {{ ad.views }}</p>
+</div>
+<div>
+	<form action="." method="post">
+		<input type="submit" value="Post to my Twitter profile" />
+	</form>
+	<br />
+	[MOCKUP]<br />
+	yotweets currently has 513 followers.<br />
+	It will cost 1 point per follower to post to this profile. (513 points)<br />
+	<input type="submit" value="Post to yotweets.com Twitter profile" />
+</div>
+{% endblock %}

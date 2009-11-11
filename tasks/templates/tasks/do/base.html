@@ -2,21 +2,6 @@
 
 {% block title %}{{ task.name }}{% endblock %}
 
-{% block head %}
-<style type="text/css">
-.task {
-	padding:15px;
-}
-.title {
-	font-size:1.2em;
-	padding-bottom:15px;
-}
-.form {
-	padding-bottom:15px;
-}
-</style>
-{% endblock %}
-
 {% block content %}
 {% include "tasks/task_overview.html" %}
 <div id="task-form">

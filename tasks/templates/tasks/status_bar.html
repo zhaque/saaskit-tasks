@@ -1,0 +1,12 @@
+{% load credits %}
+	<div id="base-header">
+		{% if request.user.is_authenticated %}
+		Logged in as <b>{{ request.user.username }}</b>
+		| <a href="{% url prepaid-index %}?next=tasks-index">{% show_user_credits request.user %} points</a>
+		| <a href="{% url tasks-home %}">My Stuff</a>
+		| <a href="{% url tasks-index %}">Browse Tasks</a>
+		{% else %}
+		<a href="{% url twitter_oauth_login %}?next={{ request.path }}">Login</a>
+		{% endif %}
+	</div>
+</div>

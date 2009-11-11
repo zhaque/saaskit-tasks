@@ -1,0 +1,32 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Tasks{% endblock %}
+
+{% block content %}
+<div>
+	<ul>
+		<li><a href="{% url tasks-task_create %}">New Poll/Survey</a></li>
+		<li><a href="{% url tasks-ad_create %}">New Campaign</a></li>
+		<li><a href="{% url tasks-classified_create %}">New Classified Ad</a></li>
+	</ul>
+</div>
+<div>
+	Labels:
+	<ul class="label-list">
+		<li><a {% if not view.label %}class="selected"{% endif %} href="?">All</a></li>
+		{% for label in request.user.task_labels.all %}
+		<li><a {% ifequal view.label label %}class="selected"{% endifequal %} href="?label={{ label.id }}">{{ label }}</a></li>
+		{% endfor %}
+	</ul>
+</div>
+<div>
+	{% if view.completed %}
+	<a href="?completed=0">View Incompleted</a>
+	{% else %}
+	<a href="?completed=1">View Completed</a>
+	{% endif %}
+</div>
+<div>
+{% include "tasks/partial/control_task_list.html" %}
+<div>
+{% endblock %}

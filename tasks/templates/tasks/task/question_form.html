@@ -1,0 +1,27 @@
+{% ifequal question.type "poll" %}
+<div class="title">{{ data.question }}</div>
+<div class="form">
+	<ul>
+		{% for answer in data.answers %}
+		<li><input type="{% if data.multiple %}checkbox{% else %}radio{% endif %}" name="choice{{ form_id }}" value="{{ forloop.counter0 }}" /><label>{{ answer.text }}</label></li>
+		{% endfor %}
+	</ul>
+</div>
+{% endifequal %}
+
+{% ifequal question.type "text" %}
+<div class="title">{{ data.question }}</div>
+<div class="form">
+	{% ifequal data.length "short" %}
+	<input type="text" name="answer{{ form_id }}" />
+	{% endifequal %}
+	
+	{% ifequal data.length "medium" %}
+	<textarea name="answer{{ form_id }}" cols="40" rows="5"></textarea>
+	{% endifequal %}
+	
+	{% ifequal data.length "long" %}
+	<textarea name="answer{{ form_id }}" cols="40" rows="15"></textarea>
+	{% endifequal %}
+</div>
+{% endifequal %}

@@ -88,22 +88,18 @@ $(document).ready(function() {
 
 </script>
 
-
-    {% ifequal list_slug "mine" %}
-        <h1>Tasks assigned to {{ request.user }}</h1>    
-    {% else %}
+    {% if project %}
+	
     {% ifequal auth_ok 1 %}
        <h1>{{ list.name }}</h1>
 	   <h2>{{ list.get_type_display }}</h2>
     {% endifequal %}
-    {% endifequal %}
-
 	
 	{% ifequal can_del 1 %}
-	{% ifnotequal list_slug "mine" %}    
 	   <p><a class="todo" href="{% url tasks-project_delete project.id %}">Delete this project</a></p>
-	{% endifnotequal %}
 	{% endifequal %}
+	
+    {% endif %}
 <br /><br />
 
    {% ifequal auth_ok 1 %}
@@ -166,9 +162,9 @@ $(document).ready(function() {
 						{{ task.date_due|date:"m/d/Y" }}  
 					{% if task.is_overdue %}</span>{% endif %}
 					</td>
-					{% ifequal list_slug "mine" %}
+					{% if not project %}
 					<td><a href="{% url tasks-project_incomplete_tasks task.project.id %}">{{ task.list }}</a></td>   
-					{% endifequal %}
+					{% endif %}
 					
 					{% comment %}
 					<td>

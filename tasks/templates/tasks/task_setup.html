@@ -1,0 +1,31 @@
+{% extends "tasks/base.html" %}
+{% load questions %}
+
+{% block title %}{{ task.name }} - Task{% endblock %}
+
+{% block content %}
+<form action="{% url tasks-task_question_add task.id %}" method="get">
+	<select name="type">
+		<option value="poll">Poll/Multiple Choice</option>
+		<option value="text">Essay/Text</option>
+	</select>
+	<input type="submit" value="Add Question" />
+</form>
+<form action="." method="post">
+	<input type="submit" value="Publish" />
+</form>
+{% if task.questions.count %}
+<div id="task-form">
+	<p>This is a preview of your task</p>
+	<ul>
+	{% for question in task.questions.all %}
+		<li>{#{{ question.data }}#}
+			{% show_task_question_form question %}
+		</li>
+	{% endfor %}
+	</ul>
+</div>
+{% else %}
+<p>Add some questions to see a preview</p>
+{% endif %}
+{% endblock %}

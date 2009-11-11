@@ -1,0 +1,17 @@
+{% ifequal question.type "poll" %}
+<div class="title">{{ data.question }}</div>
+<ul>
+	{% for answer in data.answers %}
+	<li><b>{{ answer.count }}</b> - {{ answer.text }}</li>
+	{% endfor %}
+</ul>
+{% endifequal %}
+
+{% ifequal question.type "text" %}
+<div class="title">{{ data.question }}</div>
+<ul>
+	{% for answer in data.answers %}
+	<li>{{ answer }}</li>
+	{% endfor %}
+</ul>
+{% endifequal %}

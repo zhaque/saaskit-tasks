@@ -11,11 +11,11 @@ class AttachmentInline(admin.TabularInline):
 	extra = 1
 
 class TaskAdmin(admin.ModelAdmin):
-	list_display = ('name', 'project', 'priority', 'completed', 'date_completed', 'date_due', 'date_created')
+	list_display = ('name', 'completed', 'date_completed', 'date_due', 'date_created')
 	date_heirarchy = 'date_created'
 	inlines = (AttachmentInline,)
 	list_filter = ('completed',)
-	ordering = ('project','name')
+	ordering = ('name',)
 	search_fields = ('name','description')
 	
 class AchievementAdmin(admin.ModelAdmin):
