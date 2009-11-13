@@ -27,6 +27,8 @@ urlpatterns = patterns('tasks.views',
 	url(r'^ad/(?P<object_id>\d+)/$', 'ad_detail', name='tasks-ad_detail'),
 	url(r'^ad/(?P<object_id>\d+)/manage/$', 'ad_manage', name='tasks-ad_manage'),
 	
+	url(r'^classified/(?P<object_id>\d+)/$', 'classified_detail', name='tasks-classified_detail'),
+	url(r'^classified/(?P<object_id>\d+)/manage/$', 'classified_manage', name='tasks-classified_manage'),
 	url(r'^classified/create/$', 'classified_create', name='tasks-classified_create'),
 
 	# View reorder_tasks is only called by JQuery for drag/drop task ordering

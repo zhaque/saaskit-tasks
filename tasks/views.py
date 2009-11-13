@@ -568,6 +568,16 @@ def ad_manage(request, object_id):
 #             Classifieds            #
 ######################################
 
+@render_to('tasks/classified/detail.html')
+def classified_detail(request, object_id):
+	object = get_object_or_404(Classified, pk=object_id)
+	return locals()
+	
+@render_to('tasks/classified/manage.html')
+def classified_manage(request, object_id):
+	object = get_object_or_404(Classified, pk=object_id)
+	return locals()
+	
 @render_to('tasks/classified/create.html')
 @login_required
 def classified_create(request):

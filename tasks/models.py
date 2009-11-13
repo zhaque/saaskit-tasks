@@ -6,6 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 import datetime
 from .util import serialize, deserialize
 from prepaid.models import UnitPack
+from shorturls.templatetags.shorturl import ShortURL
+from django.template.loader import get_template, Context
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
 
@@ -64,6 +66,7 @@ class Activity(models.Model):
 	
 	published = models.BooleanField(default=False)
 	completed = models.BooleanField(default=False)
+	advertised = models.BooleanField(default=False)
 	
 	date_created = models.DateTimeField(auto_now_add=True)
 	date_due = models.DateTimeField('End Date', blank=True,null=True)
@@ -71,7 +74,7 @@ class Activity(models.Model):
 	
 	content_type = models.ForeignKey(ContentType, editable=False)
 	derived = generic.GenericForeignKey(fk_field='id')
-	
+		
 	def get_manage_url(self):
 		return '%smanage/' % self.derived.get_absolute_url()
 			
@@ -97,7 +100,6 @@ class Advertisement(Activity):
 	
 	@property
 	def message(self):
-		from shorturls.templatetags.shorturl import ShortURL
 		url = ShortURL.get_shorturl(self)
 		if self.text.find('URL') >= 0:
 			return self.text.replace('URL', url)
@@ -112,6 +114,10 @@ class Classified(Activity):
 	
 	def __unicode__(self):
 		return self.title
+		
+	@models.permalink
+	def get_absolute_url(self):
+		return ('tasks-classified_detail', [str(self.id)])
 		
 class Task(Activity):
 	#type = models.IntegerField(choices=TASK_TYPES, default=0)
@@ -152,6 +158,15 @@ class Task(Activity):
 			return min(limit, per_user_rem)
 		return limit
 		
+	@property
+	def message(self):
+		c = Context()
+		c['url'] = ShortURL.get_shorturl(self)
+		c['points'] = self.points
+		c['text'] = self.name
+		t = get_template('tasks/task_tweet.txt')
+		return t.render(c).strip()
+		
 	@models.permalink
 	def get_absolute_url(self):
 		return ('tasks-task_detail', [str(self.id)])
@@ -165,16 +180,6 @@ class Task(Activity):
 	@property
 	def completions(self):
 		return self.achievements.filter(complete=True)
-	
-	@property
-	def summary(self):
-		r = self.get_type_display().title()
-		rl = self.type
-		if rl in [TaskType.POLL,TaskType.QUIZ, TaskType.QUESTION]:
-			r += u': %s' % self.data['question']
-		elif rl == TaskType.POST:
-			r += u': %s' % self.data['service']
-		return r
 	
 	@property
 	def is_overdue(self):

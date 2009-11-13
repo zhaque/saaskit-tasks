@@ -72,7 +72,7 @@ body {
 		<ul>
 			{% if info.name %}<li><span>Name</span> {{ info.name }}</li>{% endif %}
 			{% if info.location %}<li><span>Location</span> {{ info.location }}</li>{% endif %}
-			{% if info.url %}<li><span>Web</span> <a href="{{ info.url }}">{% if info.url|slice:"18:" %}{{ info.url|slice:":18" }}...{% else %}{{ info.url }}{% endif %}</a></li>{% endif %}
+			{% if info.url %}<li><span>Web</span> <a target="_blank" href="{{ info.url }}">{% if info.url|slice:"18:" %}{{ info.url|slice:":18" }}...{% else %}{{ info.url }}{% endif %}</a></li>{% endif %}
 			{% if info.description %}<li><span>Bio</span> {{ info.description }}</li>{% endif %}
 		</ul>
 		<br />
