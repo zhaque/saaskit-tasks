@@ -4,7 +4,7 @@
 <div class="form">
 	<ul>
 		{% for answer in data.answers %}
-		<li><input type="{% if data.multiple %}checkbox{% else %}radio{% endif %}" name="choice{{ form_id }}" value="{{ forloop.counter0 }}" /><label>{{ answer.text }}</label></li>
+		<li><input type="{% if data.multiple %}checkbox{% else %}radio{% endif %}" name="choice{{ form_id }}" value="{{ forloop.counter0 }}" /><label>{% oembed %}{{ answer.text }}{% endoembed %}</label></li>
 		{% endfor %}
 	</ul>
 </div>

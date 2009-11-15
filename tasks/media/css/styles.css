@@ -160,3 +160,7 @@ a.label {
 .spacer {
 	clear:both;
 }
+
+.form img, .form embed, .form object {
+	vertical-align:middle;
+}
