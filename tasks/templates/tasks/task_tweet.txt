@@ -1,1 +1,1 @@
-{{ text }}{% if points %}, {{ points }} point{{ points|pluralize }}{% endif %}, {{ url }}
+{{ text|slice:":100" }}{% if points %}, {{ points }} point{{ points|pluralize }}{% endif %}, {{ url }}

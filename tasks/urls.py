@@ -30,6 +30,11 @@ urlpatterns = patterns('tasks.views',
 	url(r'^classified/(?P<object_id>\d+)/$', 'classified_detail', name='tasks-classified_detail'),
 	url(r'^classified/(?P<object_id>\d+)/manage/$', 'classified_manage', name='tasks-classified_manage'),
 	url(r'^classified/create/$', 'classified_create', name='tasks-classified_create'),
+	
+	url(r'^feed/create/$', 'feed_create', name='tasks-feed_create'),
+	url(r'^feed/(?P<object_id>\d+)/$', 'feed_detail', name='tasks-feed_detail'),
+	url(r'^feed/(?P<object_id>\d+)/manage/$', 'feed_manage', name='tasks-feed_manage'),
+	url(r'^entry/(?P<object_id>\d+)/$', 'entry_detail', name='tasks-entry_detail'),
 
 	# View reorder_tasks is only called by JQuery for drag/drop task ordering
 	#url(r'^api/task/set_completed/$', 'api_task_set_completed', name='tasks-task_set_completed'),

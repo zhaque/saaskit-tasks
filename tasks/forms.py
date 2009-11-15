@@ -35,6 +35,11 @@ class NewClassifiedForm(forms.ModelForm):
 		model = Classified
 		exclude = ('advertised', 'published','location','zip','labels', 'user','date_completed','completed','views')
 		
+class NewFeedForm(forms.ModelForm):
+	class Meta:
+		model = Feed
+		exclude = ('advertised', 'date_due', 'date_last_updated', 'published','views','labels', 'user','date_completed','completed')
+ 
 class AddTaskForm(forms.ModelForm):
 	date_due = forms.DateField(label='End Date',
 					required=False,

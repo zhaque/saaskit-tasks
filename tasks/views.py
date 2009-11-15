@@ -594,6 +594,40 @@ def classified_create(request):
 	return locals()
 	
 ######################################
+#           Feeds/Entries            #
+######################################
+
+def feed_detail(request, object_id):
+	object = get_object_or_404(Feed, pk=object_id)
+	return HttpResponseRedirect(object.url)
+	
+@render_to('tasks/feed/manage.html')
+def feed_manage(request, object_id):
+	object = get_object_or_404(Feed, pk=object_id)
+	return locals()
+	
+@render_to('tasks/feed/create.html')
+@login_required
+def feed_create(request):
+	if request.method == 'POST':
+		form = NewFeedForm(request.POST)
+		if form.is_valid():
+			obj = form.save(commit=False)
+			obj.user = request.user
+			obj.published = True
+			obj.save()
+			return redirect('tasks-feed_manage', obj.id)
+	else:
+		form = NewFeedForm()
+	return locals()
+	
+def entry_detail(request, object_id):
+	obj = get_object_or_404(Entry, pk=object_id)
+	obj.views += 1
+	obj.save()
+	return HttpResponseRedirect(obj.url)
+	
+######################################
 #             Ajax Views             #
 ######################################
 

@@ -119,6 +119,71 @@ class Classified(Activity):
 	def get_absolute_url(self):
 		return ('tasks-classified_detail', [str(self.id)])
 		
+class Feed(Activity):
+	url = models.URLField()
+	date_last_updated = models.DateTimeField(default=datetime.datetime(1900,1,1))
+	
+	def __unicode__(self):
+		return self.url
+		
+	def fetch(self):
+		import feedparser
+		return feedparser.parse(self.url)
+		
+	def fetch_new(self):
+		feed = self.fetch()
+		r = []
+		for entry in feed.entries:
+			if datetime.datetime(*entry.updated_parsed[:6]) > self.date_last_updated:
+				r.append(entry)
+		
+		self.date_last_updated = datetime.datetime.now()
+		self.save()
+		return r
+	fetch_new.alters_data = True
+	
+	def fetch_new_entries(self):
+		r = []
+		for entry in self.fetch_new():
+			e = Entry()
+			e.feed = self
+			e.date = datetime.datetime(*entry.updated_parsed[:6])
+			e.title = entry.title
+			e.url = entry.link
+			e.save()
+			r.append(e)
+		return r
+		
+	fetch_new_entries.alters_data = True
+	
+	@models.permalink
+	def get_absolute_url(self):
+		return ('tasks-feed_detail', [str(self.id)])
+		
+class Entry(models.Model):
+	feed = models.ForeignKey(Feed, related_name='entries')
+	date = models.DateTimeField()
+	title = models.CharField(max_length=140)
+	url = models.CharField(max_length=200)
+	views = models.IntegerField(default=0)
+	published = models.BooleanField(default=False)
+	
+	def __unicode__(self):
+		return self.title
+	
+	@property
+	def message(self):
+		c = Context()
+		c['url'] = ShortURL.get_shorturl(self)
+		c['title'] = self.title
+		t = get_template('tasks/entry_tweet.txt')
+		return t.render(c).strip()
+		
+	@models.permalink
+	def get_absolute_url(self):
+		return ('tasks-entry_detail', [str(self.id)])
+	
+		
 class Task(Activity):
 	#type = models.IntegerField(choices=TASK_TYPES, default=0)
 	

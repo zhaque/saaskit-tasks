@@ -1,0 +1,28 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}{{ object.name }}{% endblock %}
+
+{% block head %}
+<style type="text/css">
+.preview {
+	margin:5px;
+	padding:5px;
+	background-color: #CECECE;
+	border: 1px solid #ADADAD;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="tasks-ad-manage">
+	<h3>{{ object.name }}</h3>
+	<p>Feed URL: {{ object.url|urlize }}</p>
+</div>
+<div>
+	<ul>
+		{% for entry in object.entries.all %}
+		<li><a href="{{ entry.url }}">{{ entry.title }}</a> - {{ entry.views }} view{{ entry.views|pluralize }}</li>
+		{% endfor %}
+	</ul>
+</div>
+{% endblock %}
