@@ -1,0 +1,21 @@
+{% load activity_advertising %}
+<div>
+	{% if object.date_self_advertised %}
+		Posted to your Twitter profile on <b>{{ object.date_self_advertised|date }}</b>
+	{% endif %}
+	<form action="{% url tasks-activity_self_advertise object.id %}" method="post">
+		<input type="submit" value="Post to my Twitter profile{% if object.date_self_advertised %} (again){% endif %}" />
+	</form>
+
+	{% if object.date_site_advertised %}
+		<br />
+		Posted to <b>{% show_activity_site_account %}</b>'s Twitter profile on <b>{{ object.date_site_advertised|date }}</b>
+	{% else %}
+		<br />
+		{% show_activity_advertising_cost object %}
+		<br />
+		<form action="{% url tasks-activity_site_advertise object.id  %}" method="post">
+			<input type="submit" value="Post to {% show_activity_site_account %}'s Twitter profile" />
+		</form>
+	{% endif %}
+</div>

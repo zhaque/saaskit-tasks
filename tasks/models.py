@@ -4,9 +4,8 @@ from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 import datetime
-from .util import serialize, deserialize
+from .util import serialize, deserialize, get_shorturl
 from prepaid.models import UnitPack
-from shorturls.templatetags.shorturl import ShortURL
 from django.template.loader import get_template, Context
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
@@ -58,19 +57,20 @@ class Project(models.Model):
 		verbose_name_plural = getattr(settings, 'TASKS_PROJECT_NAME_PLURAL', verbose_name + 's')
 		
 class Activity(models.Model):
-	user = models.ForeignKey(User, related_name='activities')
+	user = models.ForeignKey(User, related_name='activities', editable=False)
 	
 	name = models.CharField(max_length=140)
-	views = models.IntegerField(default=0)
-	labels = models.ManyToManyField('Project', blank=True, related_name='activities')
+	views = models.IntegerField(default=0, editable=False)
+	labels = models.ManyToManyField('Project', blank=True, related_name='activities', editable=False)
 	
-	published = models.BooleanField(default=False)
-	completed = models.BooleanField(default=False)
-	advertised = models.BooleanField(default=False)
+	published = models.BooleanField(default=False, editable=False)
+	completed = models.BooleanField(default=False, editable=False)
 	
 	date_created = models.DateTimeField(auto_now_add=True)
 	date_due = models.DateTimeField('End Date', blank=True,null=True)
-	date_completed = models.DateTimeField(blank=True,null=True)
+	date_completed = models.DateTimeField(blank=True,null=True, editable=False)
+	date_self_advertised = models.DateTimeField(blank=True, null=True, editable=False)
+	date_site_advertised = models.DateTimeField(blank=True, null=True, editable=False)
 	
 	content_type = models.ForeignKey(ContentType, editable=False)
 	derived = generic.GenericForeignKey(fk_field='id')
@@ -100,7 +100,7 @@ class Advertisement(Activity):
 	
 	@property
 	def message(self):
-		url = ShortURL.get_shorturl(self)
+		url = get_shorturl(self)
 		if self.text.find('URL') >= 0:
 			return self.text.replace('URL', url)
 		else:
@@ -174,7 +174,7 @@ class Entry(models.Model):
 	@property
 	def message(self):
 		c = Context()
-		c['url'] = ShortURL.get_shorturl(self)
+		c['url'] = get_shorturl(self)
 		c['title'] = self.title
 		t = get_template('tasks/entry_tweet.txt')
 		return t.render(c).strip()
@@ -226,7 +226,7 @@ class Task(Activity):
 	@property
 	def message(self):
 		c = Context()
-		c['url'] = ShortURL.get_shorturl(self)
+		c['url'] = get_shorturl(self)
 		c['points'] = self.points
 		c['text'] = self.name
 		t = get_template('tasks/task_tweet.txt')

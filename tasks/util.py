@@ -5,6 +5,10 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 import simplejson, datetime, urllib, urllib2
 
+def get_shorturl(obj):
+	from shorturls.templatetags.shorturl import ShortURL
+	return ShortURL.get_shorturl(obj)
+
 def _json_encode(obj):
 	if isinstance(obj, datetime.datetime):
 		return obj.strftime('%b %d, %Y %H:%M:%S')

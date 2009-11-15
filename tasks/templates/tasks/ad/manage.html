@@ -1,6 +1,6 @@
 {% extends "tasks/base.html" %}
 
-{% block title %}{{ ad.name }}{% endblock %}
+{% block title %}{{ object.name }}{% endblock %}
 
 {% block head %}
 <style type="text/css">
@@ -15,25 +15,10 @@
 
 {% block content %}
 <div id="tasks-ad-manage">
-	<h3>{{ ad.name }}</h3>
-	<p class="preview">{{ ad.message|urlize }}</p>
-	<p>Target URL: {{ ad.url|urlize }}</p>
-	<p>Views: {{ ad.views }}</p>
+	<h3>{{ object.name }}</h3>
+	<p class="preview">{{ object.message|urlize }}</p>
+	<p>Target URL: {{ object.url|urlize }}</p>
+	<p>Views: {{ object.views }}</p>
 </div>
-<div>
-	<form action="." method="post">
-		<input type="submit" value="Post to my Twitter profile" />
-	</form>
-	<br />
-	<b>{{ site_twitter.user }}</b> currently has <b>{{ site_twitter.followers }}</b> follower{{ site_twitter.followers|pluralize }}.<br />
-	It will cost <b>{{ site_twitter.cost }}</b> point{{ site_twitter.cost|pluralize }} to post to <b>{{ site_twitter.user }}</b>'s profile.
-		{% if site_twitter.cost_variable %}
-			({% if site_twitter.cost_fixed %}{{ site_twitter.cost_fixed }} + {% endif %}{{ site_twitter.cost_variable }} per follower)
-		{% endif %}
-	<br />
-	<form action="." method="post">
-		<input type="hidden" name="global" value="1">
-		<input type="submit" value="Post to yotweets.com Twitter profile" />
-	</form>
-</div>
+{% include "tasks/activity_advertising_form.html" %}
 {% endblock %}

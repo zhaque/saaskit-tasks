@@ -1,21 +1,21 @@
 {% load shorturl %}
 <div id="task-overview">
-	<h2>{{ task.name }}</h2>
-	<h3>{{ task.summary }}</h3>
-	<p>Short URL: <a href="{% shorturl task %}">{% shorturl task %}</a></p>
-	{% ifequal request.user task.user %}
+	<h2>{{ object.name }}</h2>
+	<h3>{{ object.summary }}</h3>
+	<p>Short URL: <a href="{% shorturl object %}">{% shorturl object %}</a></p>
+	{% ifequal request.user object.user %}
 		{% if hide_admin %}
-		<a href="{% url tasks-task_detail task.id %}">View Task</a>
+		<a href="{% url tasks-task_detail object.id %}">View Task</a>
 		{% else %}
-		<a href="{% url tasks-task_manage task.id %}">Manage Task</a>
+		<a href="{% url tasks-task_manage object.id %}">Manage Task</a>
 		{% endif %}
 	{% endifequal %}
 	<br /><br />
 	<ul>
-		<li>Started on {{ task.date_created|date }}</li>
-		<li>Ends on {{ task.date_due|date }}</li>
-		<li>Points: <b>{{ task.points }}</b>{% if task.max_points %}({{ task.max_points }} per person){% endif %}</li>
-		<li>Remaining: {{ task.get_chances_remaining }} ({% if task.limit_per_user %}{{ task.limit_per_user }} per person){% endif %}</li>
+		<li>Started on {{ object.date_created|date }}</li>
+		<li>Ends on {{ object.date_due|date }}</li>
+		<li>Points: <b>{{ object.points }}</b>{% if object.max_points %}({{ object.max_points }} per person){% endif %}</li>
+		<li>Remaining: {{ object.get_chances_remaining }} ({% if object.limit_per_user %}{{ object.limit_per_user }} per person){% endif %}</li>
 	</ul>
 	
 	

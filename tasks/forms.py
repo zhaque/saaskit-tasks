@@ -28,17 +28,17 @@ class AddProjectForm(forms.ModelForm):
 class NewAdvertisementForm(forms.ModelForm):
 	class Meta:
 		model = Advertisement
-		exclude = ('advertised', 'published','labels', 'user','date_completed','completed','views')
+		exclude = ('date_completed','completed','views')
  
 class NewClassifiedForm(forms.ModelForm):
 	class Meta:
 		model = Classified
-		exclude = ('advertised', 'published','location','zip','labels', 'user','date_completed','completed','views')
+		exclude = ('date_due', 'location','zip')
 		
 class NewFeedForm(forms.ModelForm):
 	class Meta:
 		model = Feed
-		exclude = ('advertised', 'date_due', 'date_last_updated', 'published','views','labels', 'user','date_completed','completed')
+		exclude = ('date_due', 'date_last_updated')
  
 class AddTaskForm(forms.ModelForm):
 	date_due = forms.DateField(label='End Date',
@@ -52,7 +52,7 @@ class AddTaskForm(forms.ModelForm):
 		
 	class Meta:
 		model = Task
-		exclude = ('advertised', 'labels','views', 'user','initial_budget', 'priority', 'published', 'completed', 'description', 'raw_data', 'date_completed')
+		exclude = ('initial_budget', 'description', 'raw_data')
 		
 		
 class NewPollTaskForm(AddTaskForm):

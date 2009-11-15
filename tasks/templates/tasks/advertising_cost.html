@@ -1,0 +1,5 @@
+<b>{{ info.user }}</b> currently has <b>{{ info.followers }}</b> follower{{ info.followers|pluralize }}.<br />
+It will cost <b>{{ info.cost }}</b> point{{ info.cost|pluralize }} to post to <b>{{ info.user }}</b>'s profile.
+{% if info.cost_variable %}
+	({% if info.cost_fixed %}{{ info.cost_fixed }} + {% endif %}{{ info.cost_variable }} per follower)
+{% endif %}

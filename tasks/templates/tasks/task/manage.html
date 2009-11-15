@@ -1,15 +1,16 @@
 {% extends "tasks/base.html" %}
 {% load questions %}
 
-{% block title %}{{ task.name }} - Task{% endblock %}
+{% block title %}{{ object.name }} - Task{% endblock %}
 
 {% block content %}
 {% with 1 as hide_admin %}
 {% include "tasks/task_overview.html" %}
 {% endwith %}
-<p>Completed {{ task.completions.count }} time{{ task.completions.count|pluralize }}</p>
+{% include "tasks/activity_advertising_form.html" %}
+<p>Completed {{ object.completions.count }} time{{ object.completions.count|pluralize }}</p>
 <ul id="task-form">
-	{% for question in task.questions.all %}
+	{% for question in object.questions.all %}
 	<li>{% show_task_question_stats question %}</li>
 	{% endfor %}
 </ul>

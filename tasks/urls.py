@@ -35,6 +35,9 @@ urlpatterns = patterns('tasks.views',
 	url(r'^feed/(?P<object_id>\d+)/$', 'feed_detail', name='tasks-feed_detail'),
 	url(r'^feed/(?P<object_id>\d+)/manage/$', 'feed_manage', name='tasks-feed_manage'),
 	url(r'^entry/(?P<object_id>\d+)/$', 'entry_detail', name='tasks-entry_detail'),
+	
+	url(r'^activity/(?P<object_id>\d+)/self-advertise/$', 'activity_self_advertise', name='tasks-activity_self_advertise'),
+	url(r'^activity/(?P<object_id>\d+)/site-advertise/$', 'activity_site_advertise', name='tasks-activity_site_advertise'),
 
 	# View reorder_tasks is only called by JQuery for drag/drop task ordering
 	#url(r'^api/task/set_completed/$', 'api_task_set_completed', name='tasks-task_set_completed'),
