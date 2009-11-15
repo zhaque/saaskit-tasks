@@ -5,6 +5,14 @@ from .models import *
 from .util import serialize
 import datetime
 
+def _clean_tags(self):
+	tags = self.cleaned_data['tags']
+	
+	# filter extra spaces out, replace with dash
+	tags = ','.join(['-'.join(filter(len, t.split(' '))) for t in tags.split(',')])
+	self.cleaned_data['tags'] = tags
+	return tags
+
 class TaskListViewForm(forms.Form):
 	completed = forms.BooleanField(required=False)
 	label = forms.ModelChoiceField(queryset=Project.objects.all(), required=False)
@@ -31,6 +39,14 @@ class NewAdvertisementForm(forms.ModelForm):
 		exclude = ('date_completed','completed','views')
  
 class NewClassifiedForm(forms.ModelForm):
+	tags = forms.CharField(
+		help_text='ex. dogs, cars, racing',
+		widget=forms.widgets.TextInput(attrs={'size':50}),
+		required=False
+		)
+		
+	clean_tags = _clean_tags
+	
 	class Meta:
 		model = Classified
 		exclude = ('date_due', 'location','zip')
@@ -49,6 +65,14 @@ class AddTaskForm(forms.ModelForm):
 	name = forms.CharField(
 					widget=forms.widgets.TextInput(attrs={'size':35})
 					)
+					
+	tags = forms.CharField(
+		help_text='ex. dogs, cars, racing',
+		widget=forms.widgets.TextInput(attrs={'size':50}),
+		required=False
+		)
+		
+	clean_tags = _clean_tags
 		
 	class Meta:
 		model = Task

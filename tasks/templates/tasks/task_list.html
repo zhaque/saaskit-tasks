@@ -10,10 +10,24 @@
 .details {
 	color: #bbb;
 }
+.tag-cloud {
+	text-align:center;
+	width:500px;
+	margin: 0px auto;
+	font-size:10px;
+}
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="tag-cloud">
+	{% for tag in cloud %}
+	<a href="?tags={{ tag.name }}" style="font-size:{{ tag.font_size }}em">{{ tag.name }}</a>
+	{% endfor %}
+</div>
+{% if request.GET.tags %}
+Viewing items tagged <b>{{ request.GET.tags }}</b>.
+{% endif %}
 <ul id="task-list">
 	{% for task in tasks %}
 	<li>

@@ -3,6 +3,11 @@
 {% block title %}{{ profile }}{% endblock %}
 
 {% block head %}
+<script type="text/javascript">
+$(function(){
+	load_user_profile('{{ profile.username }}');
+});
+</script>
 <style type="text/css">
 #content > div {
 	padding:0px;
@@ -88,11 +93,8 @@ body {
 			<img id="profile-image" src="{{ info.profile_image_url }}" alt="" />
 			<span id="profile-username">{{ profile }}</span>
 		</div>
-		<div id="profile-status">
-			{% with info.status as tweet %}
-			{% include "twitter/tweet.html" %}
-			{% endwith %}
-		</div>
+		<ul id="profile-tweets">
+		</ul>
 		<div id="profile-achievements">
 			{% if profile.achievements.count %}
 				Recent Achievements

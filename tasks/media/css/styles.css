@@ -164,3 +164,17 @@ a.label {
 .form img, .form embed, .form object {
 	vertical-align:middle;
 }
+#profile-tweets li {
+	padding:5px;
+	padding-bottom:15px;
+	font-size:12px;
+}
+#profile-tweets li .text {
+}
+#profile-tweets li .source {
+	color:#999;
+	font-size:0.9em;
+}
+#profile-tweets li:first-child .text {
+	font-size:1.8em;
+}

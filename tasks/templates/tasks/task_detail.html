@@ -1,7 +1,7 @@
 {% extends "tasks/base.html" %}
 
 
-{% block title %}{{ task.name }}{% endblock %}
+{% block title %}{{ object.name }}{% endblock %}
 
 
 {% block content %}
@@ -15,13 +15,13 @@
 		{% endif %}
 		{% if started %}
 			You already started this task {{ started.date_started|timesince }} ago. You may continue it now.<br />
-			<form action="{% url tasks-task_do task.id %}" method="get">
+			<form action="{% url tasks-task_do object.id %}" method="get">
 				<input type="submit" value="Continue" />
 			</form>
 		{% else %}
 			{% if remaining %}
 				You have {{ remaining }} chance{{ remaining|pluralize }} remaining to do this task. Click start to begin.
-				<form action="{% url tasks-task_do task.id %}" method="get">
+				<form action="{% url tasks-task_do object.id %}" method="get">
 					<input type="submit" value="Start" />
 				</form>
 			{% else %}
@@ -30,7 +30,7 @@
 		{% endif %}
 	{% else %}
 		You are not signed in. Click start to login and begin this task.
-		<form action="{% url tasks-task_do task.id %}" method="get">
+		<form action="{% url tasks-task_do object.id %}" method="get">
 			<input type="submit" value="Start" />
 		</form>
 	{% endif %}

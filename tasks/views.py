@@ -14,7 +14,6 @@ from django.db import IntegrityError
 from twitter_app.decorators import oauth_required
 from twitter_app.utils import get_site_twitter_user, get_or_create_twitter_user
 from twitter_app.tweet import global_tweet
-from twitter_app import twython
 from prepaid.models import UnitPack
 from .models import *
 from .forms import *
@@ -257,28 +256,17 @@ def activity_site_advertise(request, object_id):
 
 @render_to('tasks/task_list.html')
 def task_index(request):
-	return {'tasks':Task.objects.filter(published=True)}
+	tags = request.GET.get('tags')
+	if tags:
+		objects = Task.tagged.with_all(tags)
+	else:
+		objects = Task.objects.filter(published=True)
+	return {'tasks':objects, 'cloud':Task.tags.cloud()}
 
 @render_to('tasks/task_create.html')
 @login_required
 def task_create(request):
 	form_class = AddTaskForm
-	try:
-		typ = int(request.REQUEST['type'])
-		
-		if typ == TaskType.POLL:
-			form_class = NewPollTaskForm
-			
-		elif typ == TaskType.QUIZ:
-			form_class = NewQuizTaskForm
-			
-		elif typ == TaskType.POST:
-			form_class = NewPostTaskForm
-			
-		elif typ == TaskType.QUESTION:
-			form_class = NewQuestionTaskForm
-	except:
-		pass
 	
 	if request.method == 'POST':
 		form = form_class(request.POST)
@@ -292,6 +280,7 @@ def task_create(request):
 				task.user = request.user
 				task.budget = budget
 				task.save()
+				task.tags = form.cleaned_data['tags']
 				if task.budget > 0:
 					UnitPack.consume(request.user, budget, reason=BUDGET_REASON % {'task':task.name})
 				return redirect('tasks-task_setup', task.id)
@@ -626,6 +615,7 @@ def classified_create(request):
 			obj.user = request.user
 			obj.published = True
 			obj.save()
+			obj.tags = form.cleaned_data['tags']
 			return redirect('tasks-home')
 	else:
 		form = NewClassifiedForm()

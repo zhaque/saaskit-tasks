@@ -7,6 +7,7 @@ import datetime
 from .util import serialize, deserialize, get_shorturl
 from prepaid.models import UnitPack
 from django.template.loader import get_template, Context
+import tagging
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
 
@@ -86,6 +87,7 @@ class Activity(models.Model):
 	
 	class Meta:
 		ordering = ['-date_created']
+#tagging.register(Activity)
 	
 class Advertisement(Activity):
 	text = models.CharField(max_length=140)
@@ -118,7 +120,8 @@ class Classified(Activity):
 	@models.permalink
 	def get_absolute_url(self):
 		return ('tasks-classified_detail', [str(self.id)])
-		
+tagging.register(Classified)
+
 class Feed(Activity):
 	url = models.URLField()
 	date_last_updated = models.DateTimeField(default=datetime.datetime(1900,1,1))
@@ -268,7 +271,8 @@ class Task(Activity):
 	class Meta:
 		verbose_name = getattr(settings, 'TASKS_TASK_NAME', 'Task')
 		verbose_name_plural = getattr(settings, 'TASKS_TASK_NAME_PLURAL', verbose_name + 's')
-		
+tagging.register(Task)
+
 class TaskQuestion(models.Model):
 	task = models.ForeignKey(Task, related_name='questions')
 	type = models.CharField(max_length=15)
@@ -324,4 +328,4 @@ class Comment(models.Model):
 		return '%s - %s' % (
 				self.author, 
 				self.date, 
-				)		
+				)
