@@ -3,7 +3,7 @@
 {% block title %}New Task{% endblock %}
 
 {% block content %}
-<form action="." method="post">
+<form action="." method="post" enctype="multipart/form-data">
 	{{ form.as_p }}
 	<input type="hidden" name="project" value="{{ request.REQUEST.project }}" />
 	<input type="hidden" name="type" value="{{ request.REQUEST.type }}" />

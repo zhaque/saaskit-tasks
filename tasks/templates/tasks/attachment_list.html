@@ -1,0 +1,7 @@
+{% if object.attachments.count %}
+<ul class="attachment-list">
+	{% for a in object.attachments.all %}
+	<li><a target="_blank" href="{{ a.file.url }}">{{ a.name }}</a></li>
+	{% endfor %}
+</ul>
+{% endif %}

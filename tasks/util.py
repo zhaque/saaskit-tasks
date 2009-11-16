@@ -3,8 +3,12 @@ from django.template import RequestContext
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.conf import settings
-import simplejson, datetime, urllib, urllib2
+import simplejson, datetime, urllib, urllib2, random, string
 
+def random_string(len=15):
+	chars = string.letters + string.digits
+	return ''.join([random.choice(chars) for i in range(len)])
+	
 def get_shorturl(obj):
 	from shorturls.templatetags.shorturl import ShortURL
 	return ShortURL.get_shorturl(obj)

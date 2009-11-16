@@ -3,6 +3,12 @@
 
 {% block base_head %}
 
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#id_date_due').datepicker({defaultDate: new Date({% now "Y" %}, {% now "n" %} - 1, {% now "j" %}),});
+});
+</script>
+
 {% block head %}{% endblock %}
 
 {% endblock %}

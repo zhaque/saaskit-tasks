@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 import datetime
-from .util import serialize, deserialize, get_shorturl
+from .util import serialize, deserialize, get_shorturl, random_string
 from prepaid.models import UnitPack
 from django.template.loader import get_template, Context
 import tagging
@@ -75,6 +75,19 @@ class Activity(models.Model):
 	
 	content_type = models.ForeignKey(ContentType, editable=False)
 	derived = generic.GenericForeignKey(fk_field='id')
+	
+	def __unicode__(self):
+		return unicode(self.derived)
+	
+	def attach(self, file):
+		a = Attachment()
+		a.activity = self
+		a.file.save(random_string(15), file)
+		if hasattr(file, 'name'):
+			a.original_filename = file.name
+		a.save()
+		return a
+	attach.alters_data = True
 		
 	def get_manage_url(self):
 		return '%smanage/' % self.derived.get_absolute_url()
@@ -216,6 +229,9 @@ class Task(Activity):
 	
 	data = property(get_data, set_data)
 	
+	def __unicode__(self):
+		return self.name
+		
 	def get_chances_remaining(self, user=None):
 		limit = self.limit - self.achievements.count()
 		if self.points:
@@ -252,9 +268,6 @@ class Task(Activity):
 	@property
 	def is_overdue(self):
 		return datetime.date.today() > self.due_date
-
-	def __unicode__(self):
-		return self.name
 		
 	def delete(self):
 		if self.budget > 0:
@@ -291,8 +304,13 @@ class TaskQuestion(models.Model):
 		ordering = ['id']
 
 class Attachment(models.Model):
-	task = models.ForeignKey('Task', related_name='attachments')
+	activity = models.ForeignKey('Activity', related_name='attachments')
+	original_filename = models.CharField(max_length=200, blank=True)
 	file = models.FileField(upload_to='attachments/')
+	
+	@property
+	def name(self):
+		return self.original_filename or os.path.basename(self.file.name)
 	
 	def __unicode__(self):
 		return self.file.name
@@ -312,20 +330,3 @@ class Achievement(models.Model):
 	@property
 	def is_expired(self):
 		return self.date_started > datetime.datetime.now() + datetime.timedelta(minutes=self.task.reserve_time)
-
-#NOTE: I don't think I'm going to need this but I'll leave it for now
-class Comment(models.Model):	
-	"""
-	Not using Django's built-in comments becase we want to be able to save 
-	a comment and change task details at the same time. Rolling our own since it's easy.
-	"""
-	author = models.ForeignKey(User)
-	task = models.ForeignKey('Task')
-	date = models.DateTimeField(auto_now_add=True)
-	body = models.TextField(blank=True)
-	
-	def __unicode__(self):		
-		return '%s - %s' % (
-				self.author, 
-				self.date, 
-				)

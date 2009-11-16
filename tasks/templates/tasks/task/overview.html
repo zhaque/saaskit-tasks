@@ -18,5 +18,5 @@
 		<li>Remaining: {{ object.get_chances_remaining }} ({% if object.limit_per_user %}{{ object.limit_per_user }} per person){% endif %}</li>
 	</ul>
 	
-	
+	{% include "tasks/attachment_list.html" %}
 </div>

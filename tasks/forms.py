@@ -45,6 +45,8 @@ class NewClassifiedForm(forms.ModelForm):
 		required=False
 		)
 		
+	attachment = forms.FileField(required=False)
+		
 	clean_tags = _clean_tags
 	
 	class Meta:
@@ -71,6 +73,8 @@ class AddTaskForm(forms.ModelForm):
 		widget=forms.widgets.TextInput(attrs={'size':50}),
 		required=False
 		)
+		
+	attachment = forms.FileField(required=False)
 		
 	clean_tags = _clean_tags
 		

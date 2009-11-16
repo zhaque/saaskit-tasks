@@ -3,7 +3,7 @@
 {% block title %}New Classified{% endblock %}
 
 {% block content %}
-<form action="." method="post">
+<form action="." method="post" enctype="multipart/form-data">
 	{{ form.as_p }}
 	<input type="submit" value="Create" />
 </form>	

@@ -3,10 +3,9 @@
 
 {% block title %}{{ object.name }}{% endblock %}
 
-
 {% block content %}
 
-{% include "tasks/task_overview.html" %}
+{% include "tasks/task/overview.html" %}
 
 <div id="task-form">
 	{% if request.user.is_authenticated %}

@@ -5,7 +5,7 @@
 
 {% block content %}
 {% with 1 as hide_admin %}
-{% include "tasks/task_overview.html" %}
+{% include "tasks/task/overview.html" %}
 {% endwith %}
 {% include "tasks/activity_advertising_form.html" %}
 <p>Completed {{ object.completions.count }} time{{ object.completions.count|pluralize }}</p>
