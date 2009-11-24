@@ -25,6 +25,30 @@ import datetime
 # Need for links in email templates
 current_site = Site.objects.get_current()
 
+def _get_and_delete_form_data(request):	
+	if 'form-data' in request.session:
+		data = request.session['form-data']
+		del request.session['form-data']
+		return data
+
+@render_to('tasks/expired.html')
+def _activity_expired(request, object):
+	return {'object':object}
+
+@render_to('tasks/startpage.html')
+def startpage(request):
+	if request.method == 'POST' and 'activity' in request.POST:
+		activity = request.POST['activity']
+		request.session['form-data'] = dict(request.POST.items())
+		return redirect('tasks-%s_create' % activity)
+	else:
+		f = {}
+		f['task'] = AddTaskForm()
+		f['ad'] = NewAdvertisementForm()
+		f['classified'] = NewClassifiedForm()
+		f['feed'] = NewFeedForm()
+		return {'forms':f}
+
 @render_to('tasks/profile.html')
 def profile(request, username):
 	user = get_or_create_twitter_user(username)
@@ -129,7 +153,7 @@ def task_create(request):
 					UnitPack.consume(request.user, budget, reason=BUDGET_REASON % {'task':task.name})
 				return redirect('tasks-task_setup', task.id)
 	else:
-		form = form_class()
+		form = form_class(initial=_get_and_delete_form_data(request))
 	return {'form':form}
 	
 @render_to('tasks/task/setup.html')
@@ -168,6 +192,8 @@ def task_question_add(request, object_id):
 @render_to('tasks/task/detail.html')
 def task_detail(request, object_id):
 	task = get_object_or_404(Task, pk=object_id, published=True)
+	if task.is_expired():
+		return _activity_expired(request, task)
 	started = completed = None
 	remaining = 0
 	if request.user.is_authenticated():
@@ -191,6 +217,8 @@ def task_stats(request, object_id):
 @oauth_required
 def task_do(request, object_id):
 	task = get_object_or_404(Task, pk=object_id, published=True)
+	if task.is_expired():
+		return _activity_expired(request, task)
 	
 	# Create or retrieve achievement
 	achievement = None
@@ -308,14 +336,17 @@ def ad_create(request):
 			ad.save()
 			return redirect('tasks-ad_manage', ad.id)
 	else:
-		form = NewAdvertisementForm()
+		form = NewAdvertisementForm(initial=_get_and_delete_form_data(request))
 	return locals()
 	
 def ad_detail(request, object_id):
 	ad = get_object_or_404(Advertisement, pk=object_id)
-	ad.views += 1
-	ad.save()
-	return HttpResponseRedirect(ad.url)
+	if ad.is_expired():
+		return _activity_expired(request, ad)
+	else:
+		ad.views += 1
+		ad.save()
+		return HttpResponseRedirect(ad.url)
 	
 @render_to('tasks/ad/manage.html')
 @login_required
@@ -372,7 +403,7 @@ def classified_create(request):
 				obj.attach(form.cleaned_data['attachment'])
 			return redirect('tasks-home')
 	else:
-		form = NewClassifiedForm()
+		form = NewClassifiedForm(initial=_get_and_delete_form_data(request))
 	return locals()
 	
 ######################################
@@ -400,7 +431,7 @@ def feed_create(request):
 			obj.save()
 			return redirect('tasks-feed_manage', obj.id)
 	else:
-		form = NewFeedForm()
+		form = NewFeedForm(initial=_get_and_delete_form_data(request))
 	return locals()
 	
 def entry_detail(request, object_id):

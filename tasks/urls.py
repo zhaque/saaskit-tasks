@@ -3,7 +3,8 @@ from django.views.generic.simple import direct_to_template
 from django.contrib.auth import views as auth_views
 
 urlpatterns = patterns('tasks.views',
-	url(r'^$', 'task_index', name='tasks-index'),
+	url(r'^$', 'startpage', name='tasks-startpage'),
+	url(r'^browse/$', 'task_index', name='tasks-index'),
 	url(r'^profile/(?P<username>\w+)/$', 'profile', name='tasks-profile'),
 	url(r'^home/$', 'control_task_list', {}, name='tasks-home'),
 	

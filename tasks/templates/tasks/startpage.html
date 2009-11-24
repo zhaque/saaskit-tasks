@@ -1,0 +1,33 @@
+{% extends "tasks/base.html" %}
+{% load uni_form_tags %}
+
+{% block head %}
+<style type="text/css">
+</style>
+<script type="text/javascript">
+function selectForm(self) {
+	$('.uniForm').hide();
+	if (self.value.length > 0) {
+		$('#id-' + self.value + '-form').show();
+	}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+Create a new: <select onchange="selectForm(this)">
+	<option value=""></option>
+	<option value="task">Poll/Survey</option>
+	<option value="ad">Campaign</option>
+	<option value="classified">Classified</option>
+	<option value="feed">Feed</option>
+</select>
+{% for type, form in forms.items %}
+	<form style="display:none" id="id-{{ type }}-form" action="." method="post" enctype="multipart/form-data" class="uniForm">
+		<input type="hidden" name="activity" value="{{ type }}" />
+		{{ form|as_uni_form }}
+		<input type="submit" value="Create" />
+	</form>
+{% endfor %}
+
+{% endblock %}

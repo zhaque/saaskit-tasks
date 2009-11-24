@@ -3,9 +3,11 @@
 {% block title %}{{ object }}{% endblock %}
 
 {% block content %}
-<h3>{{ object }}</h3>
-<div>
-	{{ object.details }}
+<div id="task-overview">
+	<h3>{{ object }}</h3>
+	<div>
+		{{ object.details }}
+	</div>
+	{% include "tasks/attachment_list.html" %}
 </div>
-{% include "tasks/attachment_list.html" %}
 {% endblock %}

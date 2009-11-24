@@ -3,11 +3,10 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
-import datetime
 from .util import serialize, deserialize, get_shorturl, random_string
 from prepaid.models import UnitPack
 from django.template.loader import get_template, Context
-import tagging
+import tagging, os, datetime
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
 
@@ -78,6 +77,9 @@ class Activity(models.Model):
 	
 	def __unicode__(self):
 		return unicode(self.derived)
+		
+	def is_expired(self):
+		return self.date_due and self.date_due < datetime.datetime.now()
 	
 	def attach(self, file):
 		a = Attachment()
@@ -129,6 +131,11 @@ class Classified(Activity):
 	
 	def __unicode__(self):
 		return self.title
+		
+	@property
+	def message(self):
+		url = get_shorturl(self)
+		return '%s %s' % (self.title, url)
 		
 	@models.permalink
 	def get_absolute_url(self):

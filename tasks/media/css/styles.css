@@ -178,3 +178,7 @@ a.label {
 #profile-tweets li:first-child .text {
 	font-size:1.8em;
 }
+
+#ui-datepicker-div {
+	z-index: 1000;
+}
