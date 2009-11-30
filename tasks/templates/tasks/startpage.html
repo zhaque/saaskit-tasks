@@ -5,21 +5,27 @@
 <style type="text/css">
 </style>
 <script type="text/javascript">
-function selectForm(self) {
+function selectForm() {
 	$('.uniForm').hide();
-	if (self.value.length > 0) {
-		$('#id-' + self.value + '-form').show();
+	if (this.value.length > 0) {
+		var form = $('#id-' + this.value + '-form')
+		form.show();
 	}
 }
+$(function(){
+	var select = $('#select-form');
+	select.change(selectForm);
+	select.change();
+});
 </script>
 {% endblock %}
 
 {% block content %}
-Create a new: <select onchange="selectForm(this)">
+Create a new: <select id="select-form">
 	<option value=""></option>
 	<option value="task">Poll/Survey</option>
 	<option value="ad">Campaign</option>
-	<option value="classified">Classified</option>
+	<option value="classified" selected="selected">Classified</option>
 	<option value="feed">Feed</option>
 </select>
 {% for type, form in forms.items %}

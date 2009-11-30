@@ -4,8 +4,12 @@
 {% block base_head %}
 
 <script type="text/javascript">
+function initDatePicker(obj) {
+	// Problem here, datepicker awlays puts the resulting date in the first matched input element
+	$(obj).find('input[name="date_due"]').datepicker({defaultDate: new Date({% now "Y" %}, {% now "n" %} - 1, {% now "j" %}),});
+}
 $(document).ready(function() {
-	$('#id_date_due').datepicker({defaultDate: new Date({% now "Y" %}, {% now "n" %} - 1, {% now "j" %}),});
+	initDatePicker('body');
 });
 </script>
 

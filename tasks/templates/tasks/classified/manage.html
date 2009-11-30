@@ -1,4 +1,5 @@
 {% extends "tasks/base.html" %}
+{% load oembed_tags %}
 
 {% block title %}{{ object }}{% endblock %}
 
@@ -6,7 +7,7 @@
 <div id="task-overview">
 	<h3>{{ object }}</h3>
 	<div>
-		{{ object.details }}
+		{% oembed %}{{ object.details|linebreaksbr }}{% endoembed %}
 	</div>
 	{% include "tasks/attachment_list.html" %}
 </div>
