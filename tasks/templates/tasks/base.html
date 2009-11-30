@@ -9,6 +9,9 @@ function initDatePicker(obj) {
 	$(obj).find('input[name="date_due"]').datepicker({defaultDate: new Date({% now "Y" %}, {% now "n" %} - 1, {% now "j" %}),});
 }
 $(document).ready(function() {
+	{% if request.form_autosubmit %}
+		$('.autoform').submit();
+	{% endif %}
 	initDatePicker('body');
 });
 </script>

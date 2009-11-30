@@ -25,10 +25,11 @@ import datetime
 # Need for links in email templates
 current_site = Site.objects.get_current()
 
-def _get_and_delete_form_data(request):	
+def _get_and_delete_form_data(request):
 	if 'form-data' in request.session:
 		data = request.session['form-data']
 		del request.session['form-data']
+		request.form_autosubmit = True
 		return data
 
 @render_to('tasks/expired.html')
