@@ -1,7 +1,7 @@
 from django.db import models
 from django import forms
 from django.contrib.auth.models import User
-from .models import *
+from tasks.models import *
 from .util import serialize
 import datetime
 

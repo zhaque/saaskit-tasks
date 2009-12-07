@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import *
+from tasks.models import *
 
 class ProjectAdmin(admin.ModelAdmin):
 	list_display = ('name', 'slug', 'type')

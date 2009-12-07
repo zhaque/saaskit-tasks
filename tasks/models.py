@@ -3,9 +3,10 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
-from .util import serialize, deserialize, get_shorturl, random_string
 from prepaid.models import UnitPack
 from django.template.loader import get_template, Context
+from .util import serialize, deserialize, get_shorturl, random_string
+from .conf import get_site_twitter_info
 import tagging, os, datetime
 
 TASKS_LIST_TYPES = getattr(settings, 'TASKS_LIST_TYPES', ((0, 'None'),))
@@ -99,6 +100,10 @@ class Activity(models.Model):
 			self.content_type = ContentType.objects.get_for_model(self)
 		super(Activity, self).save(*args, **kargs)
 	save.alters_data = True
+	
+	@property
+	def twitter_info(self):
+		return get_site_twitter_info(self.derived)
 	
 	class Meta:
 		ordering = ['-date_created']

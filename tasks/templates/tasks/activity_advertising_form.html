@@ -12,7 +12,15 @@
 		Posted to <b>{% show_activity_site_account %}</b>'s Twitter profile on <b>{{ object.date_site_advertised|date }}</b>
 	{% else %}
 		<br />
-		{% show_activity_advertising_cost object %}
+		<div>
+			{% with object.twitter_info as info %}
+			<b>{{ info.user }}</b> currently has <b>{{ info.followers }}</b> follower{{ info.followers|pluralize }}.<br />
+			It will cost <b>{{ info.cost }}</b> point{{ info.cost|pluralize }} to post to <b>{{ info.user }}</b>'s profile.
+			{% if info.cost_variable %}
+				({% if info.cost_fixed %}{{ info.cost_fixed }} + {% endif %}{{ info.cost_variable }} per follower)
+			{% endif %}
+			{% endwith %}
+		</div>
 		<br />
 		<form action="{% url tasks-activity_site_advertise object.id  %}" method="post">
 			<input type="submit" value="Post to {% show_activity_site_account %}'s Twitter profile" />
